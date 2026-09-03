@@ -18,7 +18,7 @@ This guide contains essential commands, architectural guidelines, and codebase c
 
 ## 2. Architecture & Tech Stack
 
-- **Framework**: Next.js 15 App Router with React 19 and TypeScript in strict mode.
+- **Framework**: Next.js 16.2 App Router (Turbopack) with React 19, TypeScript strict mode, and Next.js 16 `src/proxy.ts` request boundary.
 - **API Communication**: tRPC v11 only. All data mutations and queries must go through tRPC routers (`src/server/trpc/routers/`). No REST route handlers for data.
 - **Database**: PostgreSQL 16 accessed via Drizzle ORM (`drizzle-orm/node-postgres`).
 - **Validation**: Zod schemas in `src/shared/schemas/` shared between React Hook Form and tRPC procedures.

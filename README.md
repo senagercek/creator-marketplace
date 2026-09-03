@@ -2,7 +2,7 @@
 
 A high-performance full-stack web application built for brands to launch short-form video clipping campaigns (TikTok, Instagram, YouTube) and creators to submit clips and earn based on verified views.
 
-Built with **Next.js 15 (App Router)**, **React 19**, **TypeScript (Strict Mode)**, **tRPC v11**, **Drizzle ORM**, and **PostgreSQL**.
+Built with **Next.js 16.2 (Turbopack, App Router & Proxy)**, **React 19**, **TypeScript (Strict Mode)**, **tRPC v11**, **Drizzle ORM**, and **PostgreSQL**.
 
 ---
 
@@ -126,7 +126,8 @@ creator-marketplace/
 │   ├── migrate.ts                # Migration runner
 │   └── seed.ts                   # Demo data seeder
 ├── src/
-│   ├── app/                      # Next.js 15 App Router
+│   ├── proxy.ts                  # Next.js 16 Proxy boundary (replaces middleware.ts)
+│   ├── app/                      # Next.js App Router
 │   │   ├── admin/                # Admin campaign list & detail (/admin)
 │   │   ├── creator/              # Creator browse & my-submissions (/creator)
 │   │   └── api/trpc/[trpc]/      # tRPC HTTP batch route handler

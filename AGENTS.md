@@ -6,7 +6,7 @@ This document provides instructions, conventions, and architectural context for 
 
 ## 1. Project Overview & Technology Stack
 
-- **Framework**: Next.js 15 (App Router), React 19, TypeScript (Strict Mode)
+- **Framework**: Next.js 16.2 (Turbopack, App Router, `src/proxy.ts`), React 19, TypeScript (Strict Mode)
 - **API & Networking**: tRPC v11 (No REST route handlers for application data)
 - **Database & ORM**: PostgreSQL 16 with Drizzle ORM
 - **Forms & Validation**: React Hook Form with Zod (schemas shared between client & server in `src/shared/schemas/`)
