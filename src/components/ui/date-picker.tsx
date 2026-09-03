@@ -30,6 +30,9 @@ const MONTH_NAMES = [
 
 const WEEKDAY_NAMES = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = Array.from({ length: 20 }, (_, i) => CURRENT_YEAR - 5 + i);
+
 export function DatePicker({
   value,
   onChange,
@@ -216,12 +219,40 @@ export function DatePicker({
       {/* Calendar Dropdown Popover */}
       {isOpen && (
         <div className="absolute left-0 z-50 mt-1 w-full max-w-[320px] rounded-xl border border-slate-200 bg-white p-3 shadow-xl ring-1 ring-black/5 animate-in fade-in-50 zoom-in-95">
-          {/* Header (Month & Year) */}
-          <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
-            <span className="text-xs font-bold text-slate-900">
-              {MONTH_NAMES[viewMonth]} {viewYear}
-            </span>
-            <div className="flex items-center gap-1">
+          {/* Header (Month & Year Selectors + Navigation) */}
+          <div className="flex items-center justify-between gap-1.5 pb-2.5 mb-2.5 border-b border-slate-100">
+            <div className="flex items-center gap-1.5">
+              {/* Month Selector */}
+              <select
+                value={viewMonth}
+                onChange={(e) => setViewMonth(Number(e.target.value))}
+                className="text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200/80 px-2 py-1 rounded-md border border-slate-200/60 cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-slate-900 transition-colors"
+                aria-label="Select month"
+              >
+                {MONTH_NAMES.map((m, idx) => (
+                  <option key={m} value={idx}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+
+              {/* Year Selector */}
+              <select
+                value={viewYear}
+                onChange={(e) => setViewYear(Number(e.target.value))}
+                className="text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200/80 px-2 py-1 rounded-md border border-slate-200/60 cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-slate-900 transition-colors"
+                aria-label="Select year"
+              >
+                {YEAR_OPTIONS.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Next / Previous Month Arrows */}
+            <div className="flex items-center gap-0.5">
               <button
                 type="button"
                 onClick={prevMonth}
