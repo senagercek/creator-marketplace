@@ -160,7 +160,7 @@ export function EditCampaignModal({
         </div>
 
         {/* Payout & Budget (Integer Cents per Section 3) */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700">
               Payout per 1k Views (cents)
@@ -170,7 +170,7 @@ export function EditCampaignModal({
               placeholder="500 (= $5.00)"
               {...register("payoutPer1kViews", { valueAsNumber: true })}
             />
-            <span className="text-[11px] text-slate-500 font-mono">
+            <span className="text-[11px] text-slate-500 font-mono block">
               {watch("payoutPer1kViews")
                 ? `= ${formatCentsToCurrency(watch("payoutPer1kViews"))} / 1k`
                 : "$0.00 / 1k"}
@@ -191,7 +191,7 @@ export function EditCampaignModal({
               placeholder="25000 (= $250.00)"
               {...register("totalBudget", { valueAsNumber: true })}
             />
-            <span className="text-[11px] text-slate-500 font-mono">
+            <span className="text-[11px] text-slate-500 font-mono block">
               {watch("totalBudget")
                 ? `= ${formatCentsToCurrency(watch("totalBudget"))}`
                 : "$0.00"}
@@ -205,7 +205,7 @@ export function EditCampaignModal({
         </div>
 
         {/* Dates */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700">
               Starts At
@@ -231,11 +231,20 @@ export function EditCampaignModal({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-          <Button type="button" variant="outline" onClick={onClose}>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-3 border-t border-slate-100">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="w-full sm:w-auto"
+          >
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting || updateMutation.isPending}>
+          <Button
+            type="submit"
+            disabled={isSubmitting || updateMutation.isPending}
+            className="w-full sm:w-auto"
+          >
             {updateMutation.isPending && (
               <Loader2 className="h-4 w-4 animate-spin mr-1" />
             )}

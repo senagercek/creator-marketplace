@@ -134,12 +134,9 @@ export function Navbar() {
                 </div>
               )}
 
-              {/* User Name: Shortened on mobile, full on desktop */}
+              {/* User Name: Displayed on sm screens and up */}
               <span className="hidden sm:inline font-semibold text-slate-900 truncate max-w-[120px] lg:max-w-none">
                 {currentUser ? currentUser.name : "Select User"}
-              </span>
-              <span className="inline sm:hidden font-semibold text-slate-900">
-                {currentUser ? currentUser.name.split(" ")[0] : "User"}
               </span>
 
               {/* Role Badge */}
