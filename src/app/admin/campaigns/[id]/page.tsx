@@ -22,8 +22,10 @@ import {
   ExternalLink,
   Loader2,
   Calendar,
+  Edit3,
 } from "lucide-react";
 import { formatCentsToCurrency, SubmissionStatus } from "@/shared/types";
+import { EditCampaignModal } from "@/components/EditCampaignModal";
 
 export default function CampaignDetailPage() {
   const params = useParams();
@@ -34,6 +36,7 @@ export default function CampaignDetailPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [submissionFilter, setSubmissionFilter] = useState<SubmissionStatus | "all">("all");
   const [approvalErrorMessage, setApprovalErrorMessage] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const campaignQuery = trpc.campaign.getById.useQuery({ id: campaignId });
   const submissionsQuery = trpc.submission.listByCampaign.useQuery({ campaignId });
@@ -118,6 +121,15 @@ export default function CampaignDetailPage() {
           <span>Back to Campaigns</span>
         </Link>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsEditModalOpen(true)}
+            className="gap-1.5"
+          >
+            <Edit3 className="h-3.5 w-3.5" />
+            <span>Edit Campaign</span>
+          </Button>
           <Badge variant={campaign.status} className="capitalize text-xs px-2.5 py-1">
             Status: {campaign.status}
           </Badge>
@@ -455,6 +467,17 @@ export default function CampaignDetailPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Edit Campaign Modal */}
+      <EditCampaignModal
+        campaign={campaign}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onUpdated={() => {
+          utils.campaign.getById.invalidate({ id: campaignId });
+          utils.campaign.list.invalidate();
+        }}
+      />
     </div>
   );
 }

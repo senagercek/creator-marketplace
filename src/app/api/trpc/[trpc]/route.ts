@@ -13,9 +13,11 @@ const handler = (req: Request) =>
       // Check if auth.switchUser was called successfully and set session cookie
       const isSwitchUser = opts.paths?.some((p) => p.includes("auth.switchUser"));
       if (isSwitchUser && Array.isArray(opts.data)) {
-        const result = opts.data[0] as { token?: string } | undefined;
-        if (result?.token) {
-          const cookieVal = encodeURIComponent(result.token);
+        const item: any = opts.data[0];
+        const data = item?.result?.data ?? item?.data ?? item;
+        const token = data?.token;
+        if (token) {
+          const cookieVal = encodeURIComponent(token);
           return {
             headers: {
               "Set-Cookie": `${SESSION_COOKIE_NAME}=${cookieVal}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`,
