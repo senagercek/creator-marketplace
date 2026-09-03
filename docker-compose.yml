@@ -17,5 +17,20 @@ services:
       timeout: 5s
       retries: 5
 
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: creator_marketplace_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/creator_marketplace
+      SESSION_SECRET: dev_super_secret_signing_key_32bytes_minimum_length_required!
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   pgdata:
