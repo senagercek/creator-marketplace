@@ -31,6 +31,13 @@ export function EditCampaignModal({
     },
   });
 
+  const [payoutDollar, setPayoutDollar] = React.useState(
+    (campaign.payoutPer1kViews / 100).toFixed(2)
+  );
+  const [budgetDollar, setBudgetDollar] = React.useState(
+    (campaign.totalBudget / 100).toFixed(2)
+  );
+
   const {
     register,
     handleSubmit,
@@ -159,21 +166,39 @@ export function EditCampaignModal({
           )}
         </div>
 
-        {/* Payout & Budget */}
+        {/* Payout & Budget (Dollar Input with Cents Sync) */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700">
-              Payout per 1k (cents)
+              Payout per 1k Views ($)
             </label>
-            <Input
-              type="number"
-              {...register("payoutPer1kViews", { valueAsNumber: true })}
-            />
-            <span className="text-[10px] text-slate-400">
-              {watch("payoutPer1kViews")
-                ? `= ${formatCentsToCurrency(watch("payoutPer1kViews"))} / 1k`
-                : "$0.00"}
-            </span>
+            <div className="relative">
+              <span className="absolute left-3 top-2 text-xs font-semibold text-slate-400">
+                $
+              </span>
+              <Input
+                type="number"
+                step="0.25"
+                min="0.50"
+                placeholder="5.00"
+                className="pl-7"
+                value={payoutDollar}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setPayoutDollar(val);
+                  const num = parseFloat(val);
+                  if (!isNaN(num) && num > 0) {
+                    setValue("payoutPer1kViews", Math.round(num * 100), {
+                      shouldValidate: true,
+                    });
+                  }
+                }}
+              />
+            </div>
+            <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
+              <span>= {watch("payoutPer1kViews") || 0} cents</span>
+              <span className="text-slate-400">(integer in DB)</span>
+            </div>
             {errors.payoutPer1kViews && (
               <p className="text-[11px] text-rose-600">
                 {errors.payoutPer1kViews.message}
@@ -183,17 +208,35 @@ export function EditCampaignModal({
 
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700">
-              Total Budget (cents)
+              Total Budget ($)
             </label>
-            <Input
-              type="number"
-              {...register("totalBudget", { valueAsNumber: true })}
-            />
-            <span className="text-[10px] text-slate-400">
-              {watch("totalBudget")
-                ? `= ${formatCentsToCurrency(watch("totalBudget"))}`
-                : "$0.00"}
-            </span>
+            <div className="relative">
+              <span className="absolute left-3 top-2 text-xs font-semibold text-slate-400">
+                $
+              </span>
+              <Input
+                type="number"
+                step="10"
+                min="10"
+                placeholder="250.00"
+                className="pl-7"
+                value={budgetDollar}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setBudgetDollar(val);
+                  const num = parseFloat(val);
+                  if (!isNaN(num) && num > 0) {
+                    setValue("totalBudget", Math.round(num * 100), {
+                      shouldValidate: true,
+                    });
+                  }
+                }}
+              />
+            </div>
+            <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
+              <span>= {(watch("totalBudget") || 0).toLocaleString()} cents</span>
+              <span className="text-slate-400">(integer in DB)</span>
+            </div>
             {errors.totalBudget && (
               <p className="text-[11px] text-rose-600">
                 {errors.totalBudget.message}
