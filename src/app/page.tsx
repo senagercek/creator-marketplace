@@ -6,9 +6,11 @@ import { trpc } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { ShieldCheck, Video, ArrowRight, Loader2 } from "lucide-react";
+import { useI18n } from "@/i18n/context";
 
 export default function HomePage() {
   const router = useRouter();
+  const { t } = useI18n();
   const meQuery = trpc.auth.me.useQuery();
   const switchUserMutation = trpc.auth.switchUser.useMutation();
 
@@ -39,11 +41,10 @@ export default function HomePage() {
     <div className="max-w-4xl mx-auto py-12 space-y-8">
       <div className="text-center space-y-3">
         <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
-          Creator Clip Marketplace
+          {t("landingTitle")}
         </h1>
         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-          Brands launch paid short-form video clipping campaigns. Creators submit
-          TikTok, Instagram, and YouTube clips and earn per 1,000 views.
+          {t("landingSubtitle")}
         </p>
       </div>
 
@@ -56,22 +57,20 @@ export default function HomePage() {
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <div>
-                <CardTitle>Admin Portal</CardTitle>
-                <CardDescription>Manage budgets & review submissions</CardDescription>
+                <CardTitle>{t("adminPortal")}</CardTitle>
+                <CardDescription>{t("adminPortalDesc")}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-slate-600">
-              Create campaigns, monitor real-time spent vs. remaining budgets,
-              inspect view metrics charts, and approve or reject submissions in the
-              review queue.
+              {t("adminPortalContent")}
             </p>
             <Button
               className="w-full justify-between"
               onClick={() => handleSelectRole("usr_admin", "/admin")}
             >
-              <span>Continue as Admin (Sarah)</span>
+              <span>{t("continueAsAdmin")}</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
           </CardContent>
@@ -85,22 +84,21 @@ export default function HomePage() {
                 <Video className="h-6 w-6" />
               </div>
               <div>
-                <CardTitle>Creator Portal</CardTitle>
-                <CardDescription>Submit video clips & track earnings</CardDescription>
+                <CardTitle>{t("creatorPortal")}</CardTitle>
+                <CardDescription>{t("creatorPortalDesc")}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-slate-600">
-              Browse active brand campaigns, submit your TikTok / Instagram /
-              YouTube video links, and track your daily views and estimated earnings.
+              {t("creatorPortalContent")}
             </p>
             <Button
               variant="outline"
               className="w-full justify-between"
               onClick={() => handleSelectRole("usr_creator_1", "/creator")}
             >
-              <span>Continue as Creator (Alex)</span>
+              <span>{t("continueAsCreator")}</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
           </CardContent>

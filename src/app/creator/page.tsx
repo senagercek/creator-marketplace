@@ -17,11 +17,12 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  HelpCircle,
 } from "lucide-react";
 import { formatCentsToCurrency, Platform, PLATFORMS, isValidPlatformUrl } from "@/shared/types";
+import { useI18n } from "@/i18n/context";
 
 export default function CreatorBrowsePage() {
+  const { t } = useI18n();
   const [selectedCampaign, setSelectedCampaign] = useState<any | null>(null);
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("tiktok");
   const [postUrl, setPostUrl] = useState("");
@@ -34,7 +35,7 @@ export default function CreatorBrowsePage() {
   const utils = trpc.useUtils();
   const submitMutation = trpc.submission.create.useMutation({
     onSuccess: () => {
-      setSuccessMessage("Clip submitted successfully! Awaiting brand review.");
+      setSuccessMessage(t("clipSubmittedSuccess"));
       setErrorMessage(null);
       setPostUrl("");
       utils.submission.mySubmissions.invalidate();
@@ -80,15 +81,15 @@ export default function CreatorBrowsePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Active Creator Campaigns
+            {t("activeCreatorCampaigns")}
           </h1>
           <p className="text-sm text-slate-500">
-            Select an active campaign, submit your published short-form clips, and earn per 1,000 views.
+            {t("creatorBrowseSubtitle")}
           </p>
         </div>
         <Link href="/creator/my-submissions">
           <Button variant="outline" className="gap-2">
-            <span>View My Submissions</span>
+            <span>{t("viewMySubmissions")}</span>
           </Button>
         </Link>
       </div>
@@ -100,8 +101,8 @@ export default function CreatorBrowsePage() {
         </div>
       ) : !activeCampaignsQuery.data || activeCampaignsQuery.data.length === 0 ? (
         <Card className="p-12 text-center text-slate-500">
-          <p className="font-medium">No active campaigns right now.</p>
-          <p className="text-xs text-slate-400 mt-1">Check back soon for new brand launches.</p>
+          <p className="font-medium">{t("noActiveCampaigns")}</p>
+          <p className="text-xs text-slate-400 mt-1">{t("checkBackSoon")}</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -110,7 +111,7 @@ export default function CreatorBrowsePage() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between gap-2">
                   <Badge variant="active" className="text-[11px] capitalize">
-                    {camp.status}
+                    {t(camp.status as any)}
                   </Badge>
                   <div className="flex gap-1">
                     {camp.platforms.map((p) => (
@@ -130,11 +131,11 @@ export default function CreatorBrowsePage() {
 
               <CardContent className="space-y-3 pb-4">
                 <div className="rounded-lg bg-slate-50 p-3 border border-slate-100">
-                  <div className="text-xs text-slate-500">Payout Rate</div>
+                  <div className="text-xs text-slate-500">{t("payoutRate")}</div>
                   <div className="text-xl font-bold font-mono text-emerald-600">
                     {formatCentsToCurrency(camp.payoutPer1kViews)}{" "}
                     <span className="text-xs font-normal text-slate-500">
-                      / 1k views
+                      {t("per1kViews")}
                     </span>
                   </div>
                 </div>
@@ -142,7 +143,9 @@ export default function CreatorBrowsePage() {
                 <div className="flex items-center gap-1.5 text-xs text-slate-500">
                   <Calendar className="h-3.5 w-3.5 text-slate-400" />
                   <span>
-                    Ends: {new Date(camp.endsAt).toLocaleDateString()}
+                    {t("endsOn", {
+                      date: new Date(camp.endsAt).toLocaleDateString(),
+                    })}
                   </span>
                 </div>
               </CardContent>
@@ -153,7 +156,7 @@ export default function CreatorBrowsePage() {
                   onClick={() => handleOpenSubmitModal(camp)}
                 >
                   <Send className="h-3.5 w-3.5" />
-                  <span>Submit Video Clip</span>
+                  <span>{t("submitClipBtn")}</span>
                 </Button>
               </CardFooter>
             </Card>
@@ -169,8 +172,10 @@ export default function CreatorBrowsePage() {
           setErrorMessage(null);
           setSuccessMessage(null);
         }}
-        title={`Submit Clip: ${selectedCampaign?.title || ""}`}
-        description="Provide a link to your public video post on an accepted platform."
+        title={t("submitClipModalTitle", {
+          title: selectedCampaign?.title || "",
+        })}
+        description={t("submitClipModalDesc")}
       >
         {successMessage ? (
           <div className="space-y-4 py-3 text-center">
@@ -180,7 +185,7 @@ export default function CreatorBrowsePage() {
             <div>
               <p className="text-sm font-semibold text-slate-900">{successMessage}</p>
               <p className="text-xs text-slate-500 mt-1">
-                Your clip has been queued for admin verification.
+                {t("clipQueuedDesc")}
               </p>
             </div>
             <div className="flex justify-center gap-3 pt-2">
@@ -192,10 +197,10 @@ export default function CreatorBrowsePage() {
                   setSuccessMessage(null);
                 }}
               >
-                Close
+                {t("close")}
               </Button>
               <Link href="/creator/my-submissions">
-                <Button size="sm">Go to My Submissions</Button>
+                <Button size="sm">{t("goToMySubmissions")}</Button>
               </Link>
             </div>
           </div>
@@ -211,7 +216,7 @@ export default function CreatorBrowsePage() {
             {/* Platform Selection */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700">
-                Choose Platform
+                {t("choosePlatform")}
               </label>
               <div className="flex gap-2">
                 {selectedCampaign?.platforms.map((p: Platform) => {
@@ -240,7 +245,7 @@ export default function CreatorBrowsePage() {
             {/* Post URL Input */}
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700">
-                Post URL ({selectedPlatform})
+                {t("postUrlLabel", { platform: selectedPlatform })}
               </label>
               <Input
                 type="url"
@@ -259,14 +264,14 @@ export default function CreatorBrowsePage() {
                 }}
               />
               <div className="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
-                <span>The same URL cannot be submitted to the same campaign twice.</span>
+                <span>{t("urlDuplicateNotice")}</span>
                 {postUrl.length > 0 && (
                   <span
                     className={
                       isUrlValid ? "text-emerald-600 font-medium" : "text-amber-600"
                     }
                   >
-                    {isUrlValid ? "✓ Valid URL format" : "Invalid post URL"}
+                    {isUrlValid ? t("validUrlFormat") : t("invalidUrlFormat")}
                   </span>
                 )}
               </div>
@@ -278,7 +283,7 @@ export default function CreatorBrowsePage() {
                 variant="outline"
                 onClick={() => setSelectedCampaign(null)}
               >
-                Cancel
+                {t("cancel")}
               </Button>
               <Button
                 type="submit"
@@ -287,7 +292,7 @@ export default function CreatorBrowsePage() {
                 {submitMutation.isPending && (
                   <Loader2 className="h-4 w-4 animate-spin mr-1" />
                 )}
-                Submit Clip
+                {t("submitClipBtn")}
               </Button>
             </div>
           </form>

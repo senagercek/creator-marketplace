@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PLATFORMS, Platform, formatCentsToCurrency, CAMPAIGN_STATUSES } from "@/shared/types";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { useI18n } from "@/i18n/context";
 
 interface EditCampaignModalProps {
   campaign: any;
@@ -24,6 +25,8 @@ export function EditCampaignModal({
   onClose,
   onUpdated,
 }: EditCampaignModalProps) {
+  const { t } = useI18n();
+
   const updateMutation = trpc.campaign.update.useMutation({
     onSuccess: () => {
       onUpdated();
@@ -87,8 +90,8 @@ export function EditCampaignModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Edit Campaign"
-      description="Update campaign budget, payout rate, duration, or active status."
+      title={t("editCampaignTitle")}
+      description={t("editCampaignDesc")}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {updateMutation.error && (
@@ -101,7 +104,7 @@ export function EditCampaignModal({
         {/* Title */}
         <div className="space-y-1">
           <label className="text-xs font-semibold text-slate-700">
-            Campaign Title
+            {t("fieldTitle")}
           </label>
           <Input {...register("title")} />
           {errors.title && (
@@ -112,7 +115,7 @@ export function EditCampaignModal({
         {/* Status */}
         <div className="space-y-1">
           <label className="text-xs font-semibold text-slate-700">
-            Campaign Status
+            {t("fieldStatus")}
           </label>
           <div className="flex gap-2">
             {CAMPAIGN_STATUSES.map((st) => {
@@ -128,7 +131,7 @@ export function EditCampaignModal({
                       : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  {st}
+                  {t(st as any)}
                 </button>
               );
             })}
@@ -138,7 +141,7 @@ export function EditCampaignModal({
         {/* Platforms */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-slate-700">
-            Supported Platforms
+            {t("fieldPlatforms")}
           </label>
           <div className="flex gap-2">
             {PLATFORMS.map((p) => {
@@ -170,7 +173,7 @@ export function EditCampaignModal({
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700">
-              Payout per 1k Views ($)
+              {t("fieldPayoutDollar")}
             </label>
             <div className="relative">
               <span className="absolute left-3 top-2 text-xs font-semibold text-slate-400">
@@ -196,8 +199,7 @@ export function EditCampaignModal({
               />
             </div>
             <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
-              <span>= {watch("payoutPer1kViews") || 0} cents</span>
-              <span className="text-slate-400">(integer in DB)</span>
+              <span>{t("centsNote", { cents: watch("payoutPer1kViews") || 0 })}</span>
             </div>
             {errors.payoutPer1kViews && (
               <p className="text-[11px] text-rose-600">
@@ -208,7 +210,7 @@ export function EditCampaignModal({
 
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700">
-              Total Budget ($)
+              {t("fieldBudgetDollar")}
             </label>
             <div className="relative">
               <span className="absolute left-3 top-2 text-xs font-semibold text-slate-400">
@@ -234,8 +236,7 @@ export function EditCampaignModal({
               />
             </div>
             <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
-              <span>= {(watch("totalBudget") || 0).toLocaleString()} cents</span>
-              <span className="text-slate-400">(integer in DB)</span>
+              <span>{t("centsNote", { cents: (watch("totalBudget") || 0).toLocaleString() })}</span>
             </div>
             {errors.totalBudget && (
               <p className="text-[11px] text-rose-600">
@@ -249,7 +250,7 @@ export function EditCampaignModal({
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700">
-              Starts At
+              {t("fieldStartsAt")}
             </label>
             <Input type="datetime-local" {...register("startsAt")} />
             {errors.startsAt && (
@@ -261,7 +262,7 @@ export function EditCampaignModal({
 
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700">
-              Ends At
+              {t("fieldEndsAt")}
             </label>
             <Input type="datetime-local" {...register("endsAt")} />
             {errors.endsAt && (
@@ -274,13 +275,13 @@ export function EditCampaignModal({
 
         <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
           <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button type="submit" disabled={isSubmitting || updateMutation.isPending}>
             {updateMutation.isPending && (
               <Loader2 className="h-4 w-4 animate-spin mr-1" />
             )}
-            Save Changes
+            {t("saveChanges")}
           </Button>
         </div>
       </form>

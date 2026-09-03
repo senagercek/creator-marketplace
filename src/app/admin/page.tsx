@@ -23,23 +23,24 @@ import { formatCentsToCurrency, PLATFORMS, Platform, CampaignStatus } from "@/sh
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { campaignFormSchema, CampaignFormValues } from "@/shared/schemas/campaign";
+import { useI18n } from "@/i18n/context";
 
 export default function AdminCampaignsPage() {
+  const { t } = useI18n();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<CampaignStatus | undefined>(undefined);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  // tRPC query with server pagination, search, and status filter
+  const [payoutDollar, setPayoutDollar] = useState("5.00");
+  const [budgetDollar, setBudgetDollar] = useState("250.00");
+
   const campaignsQuery = trpc.campaign.list.useQuery({
     page,
     pageSize: 8,
     search: search ? search : undefined,
     status: statusFilter,
   });
-
-  const [payoutDollar, setPayoutDollar] = useState("5.00");
-  const [budgetDollar, setBudgetDollar] = useState("250.00");
 
   const utils = trpc.useUtils();
   const createMutation = trpc.campaign.create.useMutation({
@@ -52,7 +53,6 @@ export default function AdminCampaignsPage() {
     },
   });
 
-  // React Hook Form with shared Zod schema
   const {
     register,
     handleSubmit,
@@ -100,15 +100,15 @@ export default function AdminCampaignsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Campaigns Management
+            {t("campaignsManagement")}
           </h1>
           <p className="text-sm text-slate-500">
-            Monitor budgets, review creator video submissions, and track daily performance.
+            {t("campaignsSubtitle")}
           </p>
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
-          <span>New Campaign</span>
+          <span>{t("newCampaign")}</span>
         </Button>
       </div>
 
@@ -117,7 +117,7 @@ export default function AdminCampaignsPage() {
         <div className="relative w-full sm:w-80">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
           <Input
-            placeholder="Search campaign by title..."
+            placeholder={t("searchPlaceholder")}
             className="pl-9"
             value={search}
             onChange={(e) => {
@@ -145,7 +145,7 @@ export default function AdminCampaignsPage() {
                       : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
                   }`}
                 >
-                  {status}
+                  {status === "all" ? t("all") : t(status as any)}
                 </button>
               );
             }
@@ -153,7 +153,7 @@ export default function AdminCampaignsPage() {
         </div>
       </div>
 
-      {/* Campaigns Table / Cards */}
+      {/* Campaigns Table */}
       <Card>
         <CardContent className="p-0">
           {campaignsQuery.isLoading ? (
@@ -162,9 +162,9 @@ export default function AdminCampaignsPage() {
             </div>
           ) : !campaignsQuery.data?.items || campaignsQuery.data.items.length === 0 ? (
             <div className="p-12 text-center text-slate-500 space-y-2">
-              <p className="font-medium">No campaigns found.</p>
+              <p className="font-medium">{t("noCampaignsFound")}</p>
               <p className="text-xs text-slate-400">
-                Try adjusting your search or create a new campaign.
+                {t("adjustSearchTip")}
               </p>
             </div>
           ) : (
@@ -172,13 +172,13 @@ export default function AdminCampaignsPage() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
                   <tr>
-                    <th className="px-6 py-3.5">Campaign Title</th>
-                    <th className="px-6 py-3.5">Status</th>
-                    <th className="px-6 py-3.5">Platforms</th>
-                    <th className="px-6 py-3.5">Rate / 1k</th>
-                    <th className="px-6 py-3.5">Total Budget</th>
-                    <th className="px-6 py-3.5">Duration</th>
-                    <th className="px-6 py-3.5 text-right">Actions</th>
+                    <th className="px-6 py-3.5">{t("colTitle")}</th>
+                    <th className="px-6 py-3.5">{t("colStatus")}</th>
+                    <th className="px-6 py-3.5">{t("colPlatforms")}</th>
+                    <th className="px-6 py-3.5">{t("colRate")}</th>
+                    <th className="px-6 py-3.5">{t("colBudget")}</th>
+                    <th className="px-6 py-3.5">{t("colDuration")}</th>
+                    <th className="px-6 py-3.5 text-right">{t("colActions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -193,7 +193,7 @@ export default function AdminCampaignsPage() {
                         </Link>
                       </td>
                       <td className="px-6 py-4">
-                        <Badge variant={camp.status}>{camp.status}</Badge>
+                        <Badge variant={camp.status}>{t(camp.status as any)}</Badge>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-1 flex-wrap">
@@ -220,7 +220,7 @@ export default function AdminCampaignsPage() {
                       <td className="px-6 py-4 text-right">
                         <Link href={`/admin/campaigns/${camp.id}`}>
                           <Button variant="outline" size="sm" className="gap-1">
-                            <span>Review & Detail</span>
+                            <span>{t("reviewDetail")}</span>
                             <ExternalLink className="h-3 w-3" />
                           </Button>
                         </Link>
@@ -236,11 +236,11 @@ export default function AdminCampaignsPage() {
           {campaignsQuery.data && campaignsQuery.data.totalPages > 1 && (
             <div className="flex items-center justify-between border-t border-slate-200 px-6 py-3">
               <div className="text-xs text-slate-500">
-                Showing page <span className="font-semibold">{page}</span> of{" "}
-                <span className="font-semibold">
-                  {campaignsQuery.data.totalPages}
-                </span>{" "}
-                ({campaignsQuery.data.total} total campaigns)
+                {t("pageShowing", {
+                  page,
+                  totalPages: campaignsQuery.data.totalPages,
+                  total: campaignsQuery.data.total,
+                })}
               </div>
               <div className="flex gap-2">
                 <Button
@@ -251,7 +251,7 @@ export default function AdminCampaignsPage() {
                   className="gap-1"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
-                  <span>Previous</span>
+                  <span>{t("previous")}</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -260,7 +260,7 @@ export default function AdminCampaignsPage() {
                   onClick={() => setPage((p) => p + 1)}
                   className="gap-1"
                 >
-                  <span>Next</span>
+                  <span>{t("next")}</span>
                   <ChevronRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
@@ -269,12 +269,12 @@ export default function AdminCampaignsPage() {
         </CardContent>
       </Card>
 
-      {/* Create Campaign Modal (RHF + Zod Shared Schema) */}
+      {/* Create Campaign Modal */}
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Create New Clipping Campaign"
-        description="Configure platforms, payout per 1k views, budget ceiling, and duration."
+        title={t("createCampaignTitle")}
+        description={t("createCampaignDesc")}
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {createMutation.error && (
@@ -287,10 +287,10 @@ export default function AdminCampaignsPage() {
           {/* Title */}
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700">
-              Campaign Title
+              {t("fieldTitle")}
             </label>
             <Input
-              placeholder="e.g. Summer Fitness Energy Drink Challenge"
+              placeholder={t("fieldTitlePlaceholder")}
               {...register("title")}
             />
             {errors.title && (
@@ -301,7 +301,7 @@ export default function AdminCampaignsPage() {
           {/* Platforms */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700">
-              Supported Platforms
+              {t("fieldPlatforms")}
             </label>
             <div className="flex gap-2">
               {PLATFORMS.map((p) => {
@@ -333,7 +333,7 @@ export default function AdminCampaignsPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700">
-                Payout per 1k Views ($)
+                {t("fieldPayoutDollar")}
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-2 text-xs font-semibold text-slate-400">
@@ -359,8 +359,7 @@ export default function AdminCampaignsPage() {
                 />
               </div>
               <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
-                <span>= {watch("payoutPer1kViews") || 0} cents</span>
-                <span className="text-slate-400">(integer in DB)</span>
+                <span>{t("centsNote", { cents: watch("payoutPer1kViews") || 0 })}</span>
               </div>
               {errors.payoutPer1kViews && (
                 <p className="text-[11px] text-rose-600">
@@ -371,7 +370,7 @@ export default function AdminCampaignsPage() {
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700">
-                Total Budget ($)
+                {t("fieldBudgetDollar")}
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-2 text-xs font-semibold text-slate-400">
@@ -397,8 +396,7 @@ export default function AdminCampaignsPage() {
                 />
               </div>
               <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
-                <span>= {(watch("totalBudget") || 0).toLocaleString()} cents</span>
-                <span className="text-slate-400">(integer in DB)</span>
+                <span>{t("centsNote", { cents: (watch("totalBudget") || 0).toLocaleString() })}</span>
               </div>
               {errors.totalBudget && (
                 <p className="text-[11px] text-rose-600">
@@ -412,7 +410,7 @@ export default function AdminCampaignsPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700">
-                Starts At
+                {t("fieldStartsAt")}
               </label>
               <Input type="datetime-local" {...register("startsAt")} />
               {errors.startsAt && (
@@ -424,7 +422,7 @@ export default function AdminCampaignsPage() {
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700">
-                Ends At
+                {t("fieldEndsAt")}
               </label>
               <Input type="datetime-local" {...register("endsAt")} />
               {errors.endsAt && (
@@ -441,13 +439,13 @@ export default function AdminCampaignsPage() {
               variant="outline"
               onClick={() => setIsCreateModalOpen(false)}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting || createMutation.isPending}>
               {createMutation.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin mr-1" />
               )}
-              Create Campaign
+              {t("createCampaignBtn")}
             </Button>
           </div>
         </form>
