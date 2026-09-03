@@ -322,17 +322,17 @@ export default function AdminCampaignsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700">
-                Payout per 1k Views (cents)
+                Payout per 1,000 Views (cents)
               </label>
               <Input
                 type="number"
-                placeholder="500 (= $5.00)"
+                placeholder="500"
                 {...register("payoutPer1kViews", { valueAsNumber: true })}
               />
-              <span className="text-[11px] text-slate-500 font-mono block">
+              <span className="text-[11px] text-slate-500 font-medium block">
                 {watch("payoutPer1kViews")
-                  ? `= ${formatCentsToCurrency(watch("payoutPer1kViews"))} / 1k`
-                  : "$0.00 / 1k"}
+                  ? `Equivalent: ${formatCentsToCurrency(watch("payoutPer1kViews"))} / 1k views`
+                  : "Example: 500 cents = $5.00"}
               </span>
               {errors.payoutPer1kViews && (
                 <p className="text-[11px] text-rose-600">
@@ -347,13 +347,13 @@ export default function AdminCampaignsPage() {
               </label>
               <Input
                 type="number"
-                placeholder="25000 (= $250.00)"
+                placeholder="25000"
                 {...register("totalBudget", { valueAsNumber: true })}
               />
-              <span className="text-[11px] text-slate-500 font-mono block">
+              <span className="text-[11px] text-slate-500 font-medium block">
                 {watch("totalBudget")
-                  ? `= ${formatCentsToCurrency(watch("totalBudget"))}`
-                  : "$0.00"}
+                  ? `Equivalent: ${formatCentsToCurrency(watch("totalBudget"))} total budget`
+                  : "Example: 25000 cents = $250.00"}
               </span>
               {errors.totalBudget && (
                 <p className="text-[11px] text-rose-600">
@@ -367,7 +367,7 @@ export default function AdminCampaignsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700">
-                Starts At
+                Start Date & Time
               </label>
               <Input type="datetime-local" {...register("startsAt")} />
               {errors.startsAt && (
@@ -379,7 +379,7 @@ export default function AdminCampaignsPage() {
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700">
-                Ends At
+                End Date & Time
               </label>
               <Input type="datetime-local" {...register("endsAt")} />
               {errors.endsAt && (
