@@ -2,7 +2,13 @@
 
 import * as React from "react";
 import { useState, useRef, useEffect } from "react";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Check,
+} from "lucide-react";
 
 interface DatePickerProps {
   value?: string; // YYYY-MM-DD
@@ -31,7 +37,8 @@ const MONTH_NAMES = [
 const WEEKDAY_NAMES = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 const CURRENT_YEAR = new Date().getFullYear();
-const YEAR_OPTIONS = Array.from({ length: 20 }, (_, i) => CURRENT_YEAR - 5 + i);
+// 25 years range: from 5 years ago to 20 years in the future
+const YEAR_OPTIONS = Array.from({ length: 25 }, (_, i) => CURRENT_YEAR - 5 + i);
 
 export function DatePicker({
   value,
@@ -42,6 +49,8 @@ export function DatePicker({
   className = "",
 }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
+  const [monthDropdownOpen, setMonthDropdownOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Parse initial selected date or default to today
@@ -73,6 +82,8 @@ export function DatePicker({
         !containerRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false);
+        setYearDropdownOpen(false);
+        setMonthDropdownOpen(false);
       }
     };
     if (isOpen) {
@@ -128,7 +139,7 @@ export function DatePicker({
     });
   }
 
-  // Next month leading days (to fill 35 or 42 cells)
+  // Next month leading days
   const remainingCells = 42 - days.length >= 7 ? 35 - days.length : 42 - days.length;
   for (let i = 1; i <= remainingCells; i++) {
     days.push({
@@ -145,6 +156,8 @@ export function DatePicker({
     ).padStart(2, "0")}`;
     onChange(formatted);
     setIsOpen(false);
+    setYearDropdownOpen(false);
+    setMonthDropdownOpen(false);
   };
 
   const formatDisplay = (val?: string) => {
@@ -194,7 +207,11 @@ export function DatePicker({
       {/* Input Trigger Button */}
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          setYearDropdownOpen(false);
+          setMonthDropdownOpen(false);
+        }}
         className={`w-full flex items-center justify-between gap-2 rounded-lg border bg-white px-3 py-2 text-sm text-left shadow-2xs transition-all cursor-pointer ${
           error
             ? "border-rose-300 ring-1 ring-rose-300 text-rose-900"
@@ -219,36 +236,109 @@ export function DatePicker({
       {/* Calendar Dropdown Popover */}
       {isOpen && (
         <div className="absolute left-0 z-50 mt-1 w-full max-w-[320px] rounded-xl border border-slate-200 bg-white p-3 shadow-xl ring-1 ring-black/5 animate-in fade-in-50 zoom-in-95">
-          {/* Header (Month & Year Selectors + Navigation) */}
-          <div className="flex items-center justify-between gap-1.5 pb-2.5 mb-2.5 border-b border-slate-100">
+          {/* Header (Custom Month & Year Dropdowns + Nav) */}
+          <div className="relative flex items-center justify-between gap-1.5 pb-2.5 mb-2.5 border-b border-slate-100">
             <div className="flex items-center gap-1.5">
-              {/* Month Selector */}
-              <select
-                value={viewMonth}
-                onChange={(e) => setViewMonth(Number(e.target.value))}
-                className="text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200/80 px-2 py-1 rounded-md border border-slate-200/60 cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-slate-900 transition-colors"
-                aria-label="Select month"
-              >
-                {MONTH_NAMES.map((m, idx) => (
-                  <option key={m} value={idx}>
-                    {m}
-                  </option>
-                ))}
-              </select>
+              {/* Custom Month Dropdown */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMonthDropdownOpen(!monthDropdownOpen);
+                    setYearDropdownOpen(false);
+                  }}
+                  className="flex items-center gap-1 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200/80 px-2 py-1 rounded-lg border border-slate-200/80 cursor-pointer transition-colors"
+                >
+                  <span>{MONTH_NAMES[viewMonth]}</span>
+                  <ChevronDown
+                    className={`h-3 w-3 text-slate-500 transition-transform ${
+                      monthDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
 
-              {/* Year Selector */}
-              <select
-                value={viewYear}
-                onChange={(e) => setViewYear(Number(e.target.value))}
-                className="text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200/80 px-2 py-1 rounded-md border border-slate-200/60 cursor-pointer focus:outline-hidden focus:ring-1 focus:ring-slate-900 transition-colors"
-                aria-label="Select year"
-              >
-                {YEAR_OPTIONS.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
+                {monthDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-1 z-30 max-h-48 w-36 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl ring-1 ring-black/5 animate-in fade-in-50 zoom-in-95">
+                    <div className="text-[10px] font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">
+                      Select Month
+                    </div>
+                    <div className="space-y-0.5">
+                      {MONTH_NAMES.map((m, idx) => {
+                        const isSel = idx === viewMonth;
+                        return (
+                          <button
+                            key={m}
+                            type="button"
+                            onClick={() => {
+                              setViewMonth(idx);
+                              setMonthDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-2 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center justify-between ${
+                              isSel
+                                ? "bg-slate-900 text-white font-bold shadow-2xs"
+                                : "text-slate-700 hover:bg-slate-100"
+                            }`}
+                          >
+                            <span>{m}</span>
+                            {isSel && <Check className="h-3 w-3 text-white" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Custom Scrollable Year Dropdown */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setYearDropdownOpen(!yearDropdownOpen);
+                    setMonthDropdownOpen(false);
+                  }}
+                  className="flex items-center gap-1 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200/80 px-2 py-1 rounded-lg border border-slate-200/80 cursor-pointer transition-colors"
+                >
+                  <span>{viewYear}</span>
+                  <ChevronDown
+                    className={`h-3 w-3 text-slate-500 transition-transform ${
+                      yearDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {/* Capped at max-h-44 with internal smooth scroll */}
+                {yearDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-1 z-30 max-h-44 w-28 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl ring-1 ring-black/5 animate-in fade-in-50 zoom-in-95">
+                    <div className="text-[10px] font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">
+                      Select Year
+                    </div>
+                    <div className="space-y-0.5">
+                      {YEAR_OPTIONS.map((y) => {
+                        const isSel = y === viewYear;
+                        return (
+                          <button
+                            key={y}
+                            type="button"
+                            onClick={() => {
+                              setViewYear(y);
+                              setYearDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-2 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center justify-between ${
+                              isSel
+                                ? "bg-slate-900 text-white font-bold shadow-2xs"
+                                : "text-slate-700 hover:bg-slate-100"
+                            }`}
+                          >
+                            <span>{y}</span>
+                            {isSel && <Check className="h-3 w-3 text-white" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Next / Previous Month Arrows */}
@@ -331,7 +421,11 @@ export function DatePicker({
             </button>
             <button
               type="button"
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false);
+                setYearDropdownOpen(false);
+                setMonthDropdownOpen(false);
+              }}
               className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
             >
               Close
