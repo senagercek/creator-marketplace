@@ -8,6 +8,7 @@ import { trpc } from "@/trpc/client";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { PLATFORMS, Platform, formatCentsToCurrency, CAMPAIGN_STATUSES } from "@/shared/types";
 import { AlertCircle, Loader2 } from "lucide-react";
 
@@ -207,29 +208,20 @@ export function EditCampaignModal({
         {/* Dates */}
         <div className="space-y-2">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700">
-                Start Date
-              </label>
-              <Input type="date" {...register("startsAt")} />
-              {errors.startsAt && (
-                <p className="text-[11px] text-rose-600">
-                  {errors.startsAt.message}
-                </p>
-              )}
-            </div>
+            <DatePicker
+              label="Start Date"
+              value={watch("startsAt")}
+              onChange={(val) => setValue("startsAt", val, { shouldValidate: true })}
+              error={errors.startsAt?.message}
+            />
 
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700">
-                End Date
-              </label>
-              <Input type="date" {...register("endsAt")} />
-              {errors.endsAt && (
-                <p className="text-[11px] text-rose-600">
-                  {errors.endsAt.message}
-                </p>
-              )}
-            </div>
+            <DatePicker
+              label="End Date"
+              value={watch("endsAt")}
+              minDate={watch("startsAt")}
+              onChange={(val) => setValue("endsAt", val, { shouldValidate: true })}
+              error={errors.endsAt?.message}
+            />
           </div>
 
           {/* Quick Duration Buttons */}
@@ -241,9 +233,9 @@ export function EditCampaignModal({
                 type="button"
                 onClick={() => {
                   const startVal = watch("startsAt");
-                  const baseDate = startVal ? new Date(startVal) : new Date();
+                  const baseDate = startVal ? new Date(startVal + "T00:00:00") : new Date();
                   const newEnd = new Date(baseDate.getTime() + days * 24 * 60 * 60 * 1000);
-                  setValue("endsAt", newEnd.toISOString().slice(0, 10));
+                  setValue("endsAt", newEnd.toISOString().slice(0, 10), { shouldValidate: true });
                 }}
                 className="px-2 py-0.5 rounded border border-slate-200 bg-slate-50 hover:bg-slate-100 text-[11px] font-medium text-slate-600 transition-colors cursor-pointer"
               >
