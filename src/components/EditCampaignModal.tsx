@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PLATFORMS, Platform, formatCentsToCurrency, CAMPAIGN_STATUSES } from "@/shared/types";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { useI18n } from "@/i18n/context";
 
 interface EditCampaignModalProps {
   campaign: any;
@@ -25,21 +24,12 @@ export function EditCampaignModal({
   onClose,
   onUpdated,
 }: EditCampaignModalProps) {
-  const { t } = useI18n();
-
   const updateMutation = trpc.campaign.update.useMutation({
     onSuccess: () => {
       onUpdated();
       onClose();
     },
   });
-
-  const [payoutDollar, setPayoutDollar] = React.useState(
-    (campaign.payoutPer1kViews / 100).toFixed(2)
-  );
-  const [budgetDollar, setBudgetDollar] = React.useState(
-    (campaign.totalBudget / 100).toFixed(2)
-  );
 
   const {
     register,
@@ -90,8 +80,8 @@ export function EditCampaignModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={t("editCampaignTitle")}
-      description={t("editCampaignDesc")}
+      title="Edit Campaign"
+      description="Update campaign budget, payout rate, duration, or active status."
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {updateMutation.error && (
@@ -104,7 +94,7 @@ export function EditCampaignModal({
         {/* Title */}
         <div className="space-y-1">
           <label className="text-xs font-semibold text-slate-700">
-            {t("fieldTitle")}
+            Campaign Title
           </label>
           <Input {...register("title")} />
           {errors.title && (
@@ -115,7 +105,7 @@ export function EditCampaignModal({
         {/* Status */}
         <div className="space-y-1">
           <label className="text-xs font-semibold text-slate-700">
-            {t("fieldStatus")}
+            Campaign Status
           </label>
           <div className="flex gap-2">
             {CAMPAIGN_STATUSES.map((st) => {
@@ -131,7 +121,7 @@ export function EditCampaignModal({
                       : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  {t(st as any)}
+                  {st}
                 </button>
               );
             })}
@@ -141,7 +131,7 @@ export function EditCampaignModal({
         {/* Platforms */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-slate-700">
-            {t("fieldPlatforms")}
+            Supported Platforms
           </label>
           <div className="flex gap-2">
             {PLATFORMS.map((p) => {
@@ -169,38 +159,22 @@ export function EditCampaignModal({
           )}
         </div>
 
-        {/* Payout & Budget (Dollar Input with Cents Sync) */}
+        {/* Payout & Budget (Integer Cents per Section 3) */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700">
-              {t("fieldPayoutDollar")}
+              Payout per 1k Views (cents)
             </label>
-            <div className="relative">
-              <span className="absolute left-3 top-2 text-xs font-semibold text-slate-400">
-                $
-              </span>
-              <Input
-                type="number"
-                step="0.25"
-                min="0.50"
-                placeholder="5.00"
-                className="pl-7"
-                value={payoutDollar}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setPayoutDollar(val);
-                  const num = parseFloat(val);
-                  if (!isNaN(num) && num > 0) {
-                    setValue("payoutPer1kViews", Math.round(num * 100), {
-                      shouldValidate: true,
-                    });
-                  }
-                }}
-              />
-            </div>
-            <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
-              <span>{t("centsNote", { cents: watch("payoutPer1kViews") || 0 })}</span>
-            </div>
+            <Input
+              type="number"
+              placeholder="500 (= $5.00)"
+              {...register("payoutPer1kViews", { valueAsNumber: true })}
+            />
+            <span className="text-[11px] text-slate-500 font-mono">
+              {watch("payoutPer1kViews")
+                ? `= ${formatCentsToCurrency(watch("payoutPer1kViews"))} / 1k`
+                : "$0.00 / 1k"}
+            </span>
             {errors.payoutPer1kViews && (
               <p className="text-[11px] text-rose-600">
                 {errors.payoutPer1kViews.message}
@@ -210,34 +184,18 @@ export function EditCampaignModal({
 
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700">
-              {t("fieldBudgetDollar")}
+              Total Budget (cents)
             </label>
-            <div className="relative">
-              <span className="absolute left-3 top-2 text-xs font-semibold text-slate-400">
-                $
-              </span>
-              <Input
-                type="number"
-                step="10"
-                min="10"
-                placeholder="250.00"
-                className="pl-7"
-                value={budgetDollar}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setBudgetDollar(val);
-                  const num = parseFloat(val);
-                  if (!isNaN(num) && num > 0) {
-                    setValue("totalBudget", Math.round(num * 100), {
-                      shouldValidate: true,
-                    });
-                  }
-                }}
-              />
-            </div>
-            <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
-              <span>{t("centsNote", { cents: (watch("totalBudget") || 0).toLocaleString() })}</span>
-            </div>
+            <Input
+              type="number"
+              placeholder="25000 (= $250.00)"
+              {...register("totalBudget", { valueAsNumber: true })}
+            />
+            <span className="text-[11px] text-slate-500 font-mono">
+              {watch("totalBudget")
+                ? `= ${formatCentsToCurrency(watch("totalBudget"))}`
+                : "$0.00"}
+            </span>
             {errors.totalBudget && (
               <p className="text-[11px] text-rose-600">
                 {errors.totalBudget.message}
@@ -250,7 +208,7 @@ export function EditCampaignModal({
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700">
-              {t("fieldStartsAt")}
+              Starts At
             </label>
             <Input type="datetime-local" {...register("startsAt")} />
             {errors.startsAt && (
@@ -262,7 +220,7 @@ export function EditCampaignModal({
 
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700">
-              {t("fieldEndsAt")}
+              Ends At
             </label>
             <Input type="datetime-local" {...register("endsAt")} />
             {errors.endsAt && (
@@ -275,13 +233,13 @@ export function EditCampaignModal({
 
         <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
           <Button type="button" variant="outline" onClick={onClose}>
-            {t("cancel")}
+            Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting || updateMutation.isPending}>
             {updateMutation.isPending && (
               <Loader2 className="h-4 w-4 animate-spin mr-1" />
             )}
-            {t("saveChanges")}
+            Save Changes
           </Button>
         </div>
       </form>

@@ -26,13 +26,11 @@ import {
 } from "lucide-react";
 import { formatCentsToCurrency, SubmissionStatus } from "@/shared/types";
 import { EditCampaignModal } from "@/components/EditCampaignModal";
-import { useI18n } from "@/i18n/context";
 
 export default function CampaignDetailPage() {
   const params = useParams();
   const router = useRouter();
   const campaignId = params.id as string;
-  const { t } = useI18n();
 
   const [rejectingSubId, setRejectingSubId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -91,7 +89,7 @@ export default function CampaignDetailPage() {
       <div className="p-8 text-center space-y-4">
         <p className="text-rose-600 font-medium">Campaign not found.</p>
         <Button variant="outline" onClick={() => router.push("/admin")}>
-          {t("backToCampaigns")}
+          Back to Campaigns
         </Button>
       </div>
     );
@@ -120,7 +118,7 @@ export default function CampaignDetailPage() {
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>{t("backToCampaigns")}</span>
+          <span>Back to Campaigns</span>
         </Link>
         <div className="flex items-center gap-2">
           <Button
@@ -130,10 +128,10 @@ export default function CampaignDetailPage() {
             className="gap-1.5"
           >
             <Edit3 className="h-3.5 w-3.5" />
-            <span>{t("editCampaign")}</span>
+            <span>Edit Campaign</span>
           </Button>
           <Badge variant={campaign.status} className="capitalize text-xs px-2.5 py-1">
-            {t("statusLabel")}: {t(campaign.status as any)}
+            Status: {campaign.status}
           </Badge>
         </div>
       </div>
@@ -145,9 +143,7 @@ export default function CampaignDetailPage() {
             {campaign.title}
           </h1>
           <div className="text-sm font-mono text-slate-600">
-            {t("ratePer1k", {
-              rate: formatCentsToCurrency(campaign.payoutPer1kViews),
-            })}
+            Rate: {formatCentsToCurrency(campaign.payoutPer1kViews)} / 1k views
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
@@ -160,7 +156,7 @@ export default function CampaignDetailPage() {
           </div>
           <div>•</div>
           <div>
-            {t("colPlatforms")}:{" "}
+            Platforms:{" "}
             <span className="font-medium text-slate-700 uppercase">
               {campaign.platforms.join(", ")}
             </span>
@@ -174,7 +170,7 @@ export default function CampaignDetailPage() {
         <Card className="bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-xs font-semibold uppercase text-slate-500">
-              {t("totalApprovedViews")}
+              Total Approved Views
             </span>
             <Eye className="h-4 w-4 text-sky-600" />
           </CardHeader>
@@ -183,7 +179,7 @@ export default function CampaignDetailPage() {
               {stats.totalApprovedViews.toLocaleString()}
             </div>
             <p className="text-[11px] text-slate-400 mt-1">
-              {t("approvedViewsDesc")}
+              Aggregated across all approved clips
             </p>
           </CardContent>
         </Card>
@@ -192,7 +188,7 @@ export default function CampaignDetailPage() {
         <Card className="bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-xs font-semibold uppercase text-slate-500">
-              {t("budgetSpent")}
+              Budget Spent
             </span>
             <DollarSign className="h-4 w-4 text-indigo-600" />
           </CardHeader>
@@ -217,7 +213,7 @@ export default function CampaignDetailPage() {
         <Card className="bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-xs font-semibold uppercase text-slate-500">
-              {t("budgetLeft")}
+              Budget Left
             </span>
             <TrendingUp className="h-4 w-4 text-emerald-600" />
           </CardHeader>
@@ -226,7 +222,7 @@ export default function CampaignDetailPage() {
               {formatCentsToCurrency(stats.budgetLeft)}
             </div>
             <p className="text-[11px] text-slate-400 mt-1">
-              {t("budgetAvailableDesc")}
+              Available for pending/future approvals
             </p>
           </CardContent>
         </Card>
@@ -235,7 +231,7 @@ export default function CampaignDetailPage() {
         <Card className="bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-xs font-semibold uppercase text-slate-500">
-              {t("pendingSubmissions")}
+              Pending Submissions
             </span>
             <Clock className="h-4 w-4 text-amber-600" />
           </CardHeader>
@@ -244,7 +240,7 @@ export default function CampaignDetailPage() {
               {pendingCount}
             </div>
             <p className="text-[11px] text-slate-400 mt-1">
-              {t("awaitingReviewDesc")}
+              Awaiting admin approval/rejection
             </p>
           </CardContent>
         </Card>
@@ -255,9 +251,9 @@ export default function CampaignDetailPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-base">{t("dailyViewsTimeline")}</CardTitle>
+              <CardTitle className="text-base">Daily Views Timeline</CardTitle>
               <p className="text-xs text-slate-500 mt-0.5">
-                {t("dailyViewsDesc")}
+                Daily aggregated view counts across the campaign period (zero-filled on days without metrics)
               </p>
             </div>
           </div>
@@ -272,7 +268,7 @@ export default function CampaignDetailPage() {
         <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 flex items-start gap-3 shadow-xs">
           <AlertTriangle className="h-5 w-5 shrink-0 text-rose-600 mt-0.5" />
           <div className="space-y-1">
-            <p className="text-sm font-semibold">{t("approvalBlockedTitle")}</p>
+            <p className="text-sm font-semibold">Approval Blocked by Budget Ceiling</p>
             <p className="text-xs text-rose-700">{approvalErrorMessage}</p>
           </div>
         </div>
@@ -283,10 +279,10 @@ export default function CampaignDetailPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-slate-900">
-              {t("reviewQueueTitle")}
+              Submissions Review Queue
             </h2>
             <p className="text-xs text-slate-500">
-              {t("reviewQueueSubtitle")}
+              Review video clips, examine view numbers, and approve or reject submissions.
             </p>
           </div>
 
@@ -303,7 +299,7 @@ export default function CampaignDetailPage() {
                       : "text-slate-600 hover:bg-slate-50"
                   }`}
                 >
-                  {filter === "all" ? t("all") : t(filter as any)}
+                  {filter}
                 </button>
               );
             })}
@@ -318,19 +314,19 @@ export default function CampaignDetailPage() {
               </div>
             ) : filteredSubmissions.length === 0 ? (
               <div className="p-12 text-center text-slate-400 text-sm">
-                {t("noSubmissionsMatching", { filter: submissionFilter })}
+                No submissions matching &quot;{submissionFilter}&quot;.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
                     <tr>
-                      <th className="px-6 py-3.5">{t("colClipCreator")}</th>
-                      <th className="px-6 py-3.5">{t("colPlatforms")}</th>
-                      <th className="px-6 py-3.5">{t("colLatestViews")}</th>
-                      <th className="px-6 py-3.5">{t("colCostPayout")}</th>
-                      <th className="px-6 py-3.5">{t("colStatus")}</th>
-                      <th className="px-6 py-3.5 text-right">{t("colActions")}</th>
+                      <th className="px-6 py-3.5">Clip / Creator</th>
+                      <th className="px-6 py-3.5">Platform</th>
+                      <th className="px-6 py-3.5">Latest Views</th>
+                      <th className="px-6 py-3.5">Cost / Payout</th>
+                      <th className="px-6 py-3.5">Status</th>
+                      <th className="px-6 py-3.5 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -366,10 +362,10 @@ export default function CampaignDetailPage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="space-y-1">
-                            <Badge variant={sub.status}>{t(sub.status as any)}</Badge>
+                            <Badge variant={sub.status}>{sub.status}</Badge>
                             {sub.rejectionReason && (
                               <p className="text-[11px] text-rose-600 max-w-xs">
-                                {t("rejectionReasonLabel")}: {sub.rejectionReason}
+                                Reason: {sub.rejectionReason}
                               </p>
                             )}
                           </div>
@@ -385,7 +381,7 @@ export default function CampaignDetailPage() {
                                 onClick={() => handleApprove(sub.id)}
                               >
                                 <CheckCircle2 className="h-3.5 w-3.5" />
-                                <span>{t("approve")}</span>
+                                <span>Approve</span>
                               </Button>
                               <Button
                                 size="sm"
@@ -398,12 +394,12 @@ export default function CampaignDetailPage() {
                                 }}
                               >
                                 <XCircle className="h-3.5 w-3.5" />
-                                <span>{t("reject")}</span>
+                                <span>Reject</span>
                               </Button>
                             </div>
                           ) : (
                             <span className="text-xs text-slate-400 italic">
-                              {t("reviewed")}
+                              Reviewed
                             </span>
                           )}
                         </td>
@@ -421,25 +417,25 @@ export default function CampaignDetailPage() {
       <Modal
         isOpen={rejectingSubId !== null}
         onClose={() => setRejectingSubId(null)}
-        title={t("rejectModalTitle")}
-        description={t("rejectModalDesc")}
+        title="Reject Submission"
+        description="Please provide a clear reason for rejecting this clip submission (required)."
       >
         <form onSubmit={handleRejectSubmit} className="space-y-4">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700">
-              {t("rejectionReasonLabel")}
+              Rejection Reason
             </label>
             <textarea
               required
               rows={3}
-              placeholder={t("rejectionReasonPlaceholder")}
+              placeholder="e.g. Video does not tag the campaign sponsor or violates content guidelines."
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
               className="w-full rounded-md border border-slate-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
             />
             {rejectionReason.length > 0 && rejectionReason.length < 3 && (
               <p className="text-[11px] text-rose-600">
-                {t("reasonMinChars")}
+                Reason must be at least 3 characters.
               </p>
             )}
           </div>
@@ -450,7 +446,7 @@ export default function CampaignDetailPage() {
               variant="outline"
               onClick={() => setRejectingSubId(null)}
             >
-              {t("cancel")}
+              Cancel
             </Button>
             <Button
               type="submit"
@@ -462,7 +458,7 @@ export default function CampaignDetailPage() {
               {rejectMutation.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin mr-1" />
               )}
-              {t("confirmRejection")}
+              Confirm Rejection
             </Button>
           </div>
         </form>

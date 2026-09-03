@@ -23,17 +23,12 @@ import { formatCentsToCurrency, PLATFORMS, Platform, CampaignStatus } from "@/sh
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { campaignFormSchema, CampaignFormValues } from "@/shared/schemas/campaign";
-import { useI18n } from "@/i18n/context";
 
 export default function AdminCampaignsPage() {
-  const { t } = useI18n();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<CampaignStatus | undefined>(undefined);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-
-  const [payoutDollar, setPayoutDollar] = useState("5.00");
-  const [budgetDollar, setBudgetDollar] = useState("250.00");
 
   const campaignsQuery = trpc.campaign.list.useQuery({
     page,
@@ -48,8 +43,6 @@ export default function AdminCampaignsPage() {
       utils.campaign.list.invalidate();
       setIsCreateModalOpen(false);
       reset();
-      setPayoutDollar("5.00");
-      setBudgetDollar("250.00");
     },
   });
 
@@ -65,8 +58,8 @@ export default function AdminCampaignsPage() {
     defaultValues: {
       title: "",
       platforms: ["tiktok", "instagram"],
-      payoutPer1kViews: 500, // $5.00
-      totalBudget: 25000, // $250.00
+      payoutPer1kViews: 500, // 500 cents = $5.00
+      totalBudget: 25000, // 25000 cents = $250.00
       status: "active",
       startsAt: new Date().toISOString().slice(0, 16),
       endsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
@@ -100,15 +93,15 @@ export default function AdminCampaignsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            {t("campaignsManagement")}
+            Campaigns Management
           </h1>
           <p className="text-sm text-slate-500">
-            {t("campaignsSubtitle")}
+            Monitor budgets, review creator video submissions, and track daily performance.
           </p>
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
-          <span>{t("newCampaign")}</span>
+          <span>New Campaign</span>
         </Button>
       </div>
 
@@ -117,7 +110,7 @@ export default function AdminCampaignsPage() {
         <div className="relative w-full sm:w-80">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
           <Input
-            placeholder={t("searchPlaceholder")}
+            placeholder="Search campaign by title..."
             className="pl-9"
             value={search}
             onChange={(e) => {
@@ -145,7 +138,7 @@ export default function AdminCampaignsPage() {
                       : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
                   }`}
                 >
-                  {status === "all" ? t("all") : t(status as any)}
+                  {status}
                 </button>
               );
             }
@@ -162,9 +155,9 @@ export default function AdminCampaignsPage() {
             </div>
           ) : !campaignsQuery.data?.items || campaignsQuery.data.items.length === 0 ? (
             <div className="p-12 text-center text-slate-500 space-y-2">
-              <p className="font-medium">{t("noCampaignsFound")}</p>
+              <p className="font-medium">No campaigns found.</p>
               <p className="text-xs text-slate-400">
-                {t("adjustSearchTip")}
+                Try adjusting your search or create a new campaign.
               </p>
             </div>
           ) : (
@@ -172,13 +165,13 @@ export default function AdminCampaignsPage() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
                   <tr>
-                    <th className="px-6 py-3.5">{t("colTitle")}</th>
-                    <th className="px-6 py-3.5">{t("colStatus")}</th>
-                    <th className="px-6 py-3.5">{t("colPlatforms")}</th>
-                    <th className="px-6 py-3.5">{t("colRate")}</th>
-                    <th className="px-6 py-3.5">{t("colBudget")}</th>
-                    <th className="px-6 py-3.5">{t("colDuration")}</th>
-                    <th className="px-6 py-3.5 text-right">{t("colActions")}</th>
+                    <th className="px-6 py-3.5">Campaign Title</th>
+                    <th className="px-6 py-3.5">Status</th>
+                    <th className="px-6 py-3.5">Platforms</th>
+                    <th className="px-6 py-3.5">Rate / 1k</th>
+                    <th className="px-6 py-3.5">Total Budget</th>
+                    <th className="px-6 py-3.5">Duration</th>
+                    <th className="px-6 py-3.5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -193,7 +186,7 @@ export default function AdminCampaignsPage() {
                         </Link>
                       </td>
                       <td className="px-6 py-4">
-                        <Badge variant={camp.status}>{t(camp.status as any)}</Badge>
+                        <Badge variant={camp.status}>{camp.status}</Badge>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-1 flex-wrap">
@@ -220,7 +213,7 @@ export default function AdminCampaignsPage() {
                       <td className="px-6 py-4 text-right">
                         <Link href={`/admin/campaigns/${camp.id}`}>
                           <Button variant="outline" size="sm" className="gap-1">
-                            <span>{t("reviewDetail")}</span>
+                            <span>Review & Detail</span>
                             <ExternalLink className="h-3 w-3" />
                           </Button>
                         </Link>
@@ -236,11 +229,7 @@ export default function AdminCampaignsPage() {
           {campaignsQuery.data && campaignsQuery.data.totalPages > 1 && (
             <div className="flex items-center justify-between border-t border-slate-200 px-6 py-3">
               <div className="text-xs text-slate-500">
-                {t("pageShowing", {
-                  page,
-                  totalPages: campaignsQuery.data.totalPages,
-                  total: campaignsQuery.data.total,
-                })}
+                Showing page {page} of {campaignsQuery.data.totalPages} ({campaignsQuery.data.total} total campaigns)
               </div>
               <div className="flex gap-2">
                 <Button
@@ -251,7 +240,7 @@ export default function AdminCampaignsPage() {
                   className="gap-1"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
-                  <span>{t("previous")}</span>
+                  <span>Previous</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -260,7 +249,7 @@ export default function AdminCampaignsPage() {
                   onClick={() => setPage((p) => p + 1)}
                   className="gap-1"
                 >
-                  <span>{t("next")}</span>
+                  <span>Next</span>
                   <ChevronRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
@@ -273,8 +262,8 @@ export default function AdminCampaignsPage() {
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title={t("createCampaignTitle")}
-        description={t("createCampaignDesc")}
+        title="Create New Clipping Campaign"
+        description="Configure platforms, payout per 1k views, budget ceiling, and duration."
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {createMutation.error && (
@@ -287,10 +276,10 @@ export default function AdminCampaignsPage() {
           {/* Title */}
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700">
-              {t("fieldTitle")}
+              Campaign Title
             </label>
             <Input
-              placeholder={t("fieldTitlePlaceholder")}
+              placeholder="e.g. Summer Fitness Energy Drink Challenge"
               {...register("title")}
             />
             {errors.title && (
@@ -301,7 +290,7 @@ export default function AdminCampaignsPage() {
           {/* Platforms */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700">
-              {t("fieldPlatforms")}
+              Supported Platforms
             </label>
             <div className="flex gap-2">
               {PLATFORMS.map((p) => {
@@ -329,38 +318,22 @@ export default function AdminCampaignsPage() {
             )}
           </div>
 
-          {/* Payout & Budget (Dollar Input with Cents Sync) */}
+          {/* Payout & Budget (Integer Cents per Section 3) */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700">
-                {t("fieldPayoutDollar")}
+                Payout per 1k Views (cents)
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2 text-xs font-semibold text-slate-400">
-                  $
-                </span>
-                <Input
-                  type="number"
-                  step="0.25"
-                  min="0.50"
-                  placeholder="5.00"
-                  className="pl-7"
-                  value={payoutDollar}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setPayoutDollar(val);
-                    const num = parseFloat(val);
-                    if (!isNaN(num) && num > 0) {
-                      setValue("payoutPer1kViews", Math.round(num * 100), {
-                        shouldValidate: true,
-                      });
-                    }
-                  }}
-                />
-              </div>
-              <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
-                <span>{t("centsNote", { cents: watch("payoutPer1kViews") || 0 })}</span>
-              </div>
+              <Input
+                type="number"
+                placeholder="500 (= $5.00)"
+                {...register("payoutPer1kViews", { valueAsNumber: true })}
+              />
+              <span className="text-[11px] text-slate-500 font-mono">
+                {watch("payoutPer1kViews")
+                  ? `= ${formatCentsToCurrency(watch("payoutPer1kViews"))} / 1k`
+                  : "$0.00 / 1k"}
+              </span>
               {errors.payoutPer1kViews && (
                 <p className="text-[11px] text-rose-600">
                   {errors.payoutPer1kViews.message}
@@ -370,34 +343,18 @@ export default function AdminCampaignsPage() {
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700">
-                {t("fieldBudgetDollar")}
+                Total Budget (cents)
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2 text-xs font-semibold text-slate-400">
-                  $
-                </span>
-                <Input
-                  type="number"
-                  step="10"
-                  min="10"
-                  placeholder="250.00"
-                  className="pl-7"
-                  value={budgetDollar}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setBudgetDollar(val);
-                    const num = parseFloat(val);
-                    if (!isNaN(num) && num > 0) {
-                      setValue("totalBudget", Math.round(num * 100), {
-                        shouldValidate: true,
-                      });
-                    }
-                  }}
-                />
-              </div>
-              <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
-                <span>{t("centsNote", { cents: (watch("totalBudget") || 0).toLocaleString() })}</span>
-              </div>
+              <Input
+                type="number"
+                placeholder="25000 (= $250.00)"
+                {...register("totalBudget", { valueAsNumber: true })}
+              />
+              <span className="text-[11px] text-slate-500 font-mono">
+                {watch("totalBudget")
+                  ? `= ${formatCentsToCurrency(watch("totalBudget"))}`
+                  : "$0.00"}
+              </span>
               {errors.totalBudget && (
                 <p className="text-[11px] text-rose-600">
                   {errors.totalBudget.message}
@@ -410,7 +367,7 @@ export default function AdminCampaignsPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700">
-                {t("fieldStartsAt")}
+                Starts At
               </label>
               <Input type="datetime-local" {...register("startsAt")} />
               {errors.startsAt && (
@@ -422,7 +379,7 @@ export default function AdminCampaignsPage() {
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700">
-                {t("fieldEndsAt")}
+                Ends At
               </label>
               <Input type="datetime-local" {...register("endsAt")} />
               {errors.endsAt && (
@@ -439,13 +396,13 @@ export default function AdminCampaignsPage() {
               variant="outline"
               onClick={() => setIsCreateModalOpen(false)}
             >
-              {t("cancel")}
+              Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting || createMutation.isPending}>
               {createMutation.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin mr-1" />
               )}
-              {t("createCampaignBtn")}
+              Create Campaign
             </Button>
           </div>
         </form>

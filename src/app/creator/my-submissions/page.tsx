@@ -17,10 +17,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { formatCentsToCurrency } from "@/shared/types";
-import { useI18n } from "@/i18n/context";
 
 export default function MySubmissionsPage() {
-  const { t } = useI18n();
   const mySubmissionsQuery = trpc.submission.mySubmissions.useQuery();
   const meQuery = trpc.auth.me.useQuery();
 
@@ -39,14 +37,14 @@ export default function MySubmissionsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            {t("myClipSubmissions")}
+            My Clip Submissions
           </h1>
           <p className="text-sm text-slate-500">
-            {t("mySubmissionsSubtitle")}
+            Track the verification status, daily sync views, and estimated earnings of your videos.
           </p>
         </div>
         <Link href="/creator">
-          <Button className="gap-2">{t("browseMoreCampaigns")}</Button>
+          <Button className="gap-2">Browse More Campaigns</Button>
         </Link>
       </div>
 
@@ -55,7 +53,7 @@ export default function MySubmissionsPage() {
         <Card className="bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-xs font-semibold uppercase text-slate-500">
-              {t("totalSubmissions")}
+              Total Submissions
             </span>
             <Clock className="h-4 w-4 text-slate-500" />
           </CardHeader>
@@ -69,7 +67,7 @@ export default function MySubmissionsPage() {
         <Card className="bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-xs font-semibold uppercase text-slate-500">
-              {t("totalTrackedViews")}
+              Total Tracked Views
             </span>
             <Eye className="h-4 w-4 text-sky-600" />
           </CardHeader>
@@ -83,7 +81,7 @@ export default function MySubmissionsPage() {
         <Card className="bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-xs font-semibold uppercase text-slate-500">
-              {t("estimatedTotalEarnings")}
+              Estimated Total Earnings
             </span>
             <DollarSign className="h-4 w-4 text-emerald-600" />
           </CardHeader>
@@ -92,7 +90,7 @@ export default function MySubmissionsPage() {
               {formatCentsToCurrency(totalEarned)}
             </div>
             <p className="text-[11px] text-slate-400 mt-1">
-              {t("fromApprovedViews")}
+              From approved clip views
             </p>
           </CardContent>
         </Card>
@@ -107,13 +105,13 @@ export default function MySubmissionsPage() {
             </div>
           ) : submissions.length === 0 ? (
             <div className="p-12 text-center text-slate-500 space-y-3">
-              <p className="font-medium">{t("noSubmissionsYet")}</p>
+              <p className="font-medium">You have not submitted any clips yet.</p>
               <p className="text-xs text-slate-400">
-                {t("noSubmissionsTip")}
+                Browse active brand campaigns and submit your first video URL!
               </p>
               <Link href="/creator">
                 <Button size="sm" className="mt-2">
-                  {t("browseCampaigns")}
+                  Browse Campaigns
                 </Button>
               </Link>
             </div>
@@ -122,12 +120,12 @@ export default function MySubmissionsPage() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
                   <tr>
-                    <th className="px-6 py-3.5">{t("colCampaign")}</th>
-                    <th className="px-6 py-3.5">{t("colPlatformLink")}</th>
-                    <th className="px-6 py-3.5">{t("colCurrentViews")}</th>
-                    <th className="px-6 py-3.5">{t("colEstimatedEarnings")}</th>
-                    <th className="px-6 py-3.5">{t("colStatus")}</th>
-                    <th className="px-6 py-3.5">{t("colSubmittedOn")}</th>
+                    <th className="px-6 py-3.5">Campaign</th>
+                    <th className="px-6 py-3.5">Platform & Link</th>
+                    <th className="px-6 py-3.5">Current Views</th>
+                    <th className="px-6 py-3.5">Estimated Earnings</th>
+                    <th className="px-6 py-3.5">Status</th>
+                    <th className="px-6 py-3.5">Submitted On</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -160,17 +158,17 @@ export default function MySubmissionsPage() {
                           formatCentsToCurrency(sub.estimatedEarnings)
                         ) : (
                           <span className="text-slate-400 font-normal text-xs">
-                            {t("pendingApproval")}
+                            Pending approval
                           </span>
                         )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="space-y-1">
-                          <Badge variant={sub.status}>{t(sub.status as any)}</Badge>
+                          <Badge variant={sub.status}>{sub.status}</Badge>
                           {sub.rejectionReason && (
                             <div className="flex items-start gap-1 text-[11px] text-rose-600 max-w-xs mt-1">
                               <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                              <span>{t("rejectionReasonLabel")}: {sub.rejectionReason}</span>
+                              <span>Reason: {sub.rejectionReason}</span>
                             </div>
                           )}
                         </div>

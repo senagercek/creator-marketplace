@@ -6,14 +6,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { trpc } from "@/trpc/client";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Users, Video, ShieldCheck, ChevronDown, Globe } from "lucide-react";
-import { useI18n } from "@/i18n/context";
+import { Users, Video, ShieldCheck, ChevronDown } from "lucide-react";
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const { locale, setLocale, t } = useI18n();
 
   const meQuery = trpc.auth.me.useQuery();
   const devUsersQuery = trpc.auth.listDevUsers.useQuery();
@@ -40,7 +38,7 @@ export function Navbar() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white">
               <Video className="h-4 w-4" />
             </div>
-            <span>{t("appName")}</span>
+            <span>ClipMarket</span>
           </Link>
 
           {/* Navigation Links */}
@@ -55,7 +53,7 @@ export function Navbar() {
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
-                  {t("adminCampaigns")}
+                  Admin Campaigns
                 </Link>
               </>
             ) : (
@@ -68,7 +66,7 @@ export function Navbar() {
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
-                  {t("browseCampaigns")}
+                  Browse Campaigns
                 </Link>
                 <Link
                   href="/creator/my-submissions"
@@ -78,115 +76,88 @@ export function Navbar() {
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
-                  {t("mySubmissions")}
+                  My Submissions
                 </Link>
               </>
             )}
           </nav>
         </div>
 
-        {/* Right Section: Language Switcher + Dev User Switcher */}
-        <div className="flex items-center gap-3">
-          {/* Language Switcher */}
-          <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+        {/* Dev User Switcher */}
+        <div className="relative">
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline-block text-xs font-mono text-slate-400">
+              [DEV AUTH]
+            </span>
             <button
-              onClick={() => setLocale("en")}
-              className={`px-2 py-1 rounded-md text-xs font-medium transition-all cursor-pointer ${
-                locale === "en"
-                  ? "bg-white text-slate-900 shadow-xs font-semibold"
-                  : "text-slate-500 hover:text-slate-800"
-              }`}
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             >
-              🇬🇧 EN
-            </button>
-            <button
-              onClick={() => setLocale("tr")}
-              className={`px-2 py-1 rounded-md text-xs font-medium transition-all cursor-pointer ${
-                locale === "tr"
-                  ? "bg-white text-slate-900 shadow-xs font-semibold"
-                  : "text-slate-500 hover:text-slate-800"
-              }`}
-            >
-              🇹🇷 TR
+              {currentUser?.role === "admin" ? (
+                <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" />
+              ) : (
+                <Users className="h-3.5 w-3.5 text-emerald-600" />
+              )}
+              <span>{currentUser ? currentUser.name : "Select User..."}</span>
+              <Badge
+                variant={currentUser?.role === "admin" ? "default" : "secondary"}
+                className="text-[10px] px-1.5 py-0"
+              >
+                {currentUser?.role || "guest"}
+              </Badge>
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
             </button>
           </div>
 
-          {/* Dev User Switcher */}
-          <div className="relative">
-            <div className="flex items-center gap-2">
-              <span className="hidden sm:inline-block text-xs font-mono text-slate-400">
-                {t("devAuth")}
-              </span>
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                {currentUser?.role === "admin" ? (
-                  <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" />
-                ) : (
-                  <Users className="h-3.5 w-3.5 text-emerald-600" />
-                )}
-                <span>{currentUser ? currentUser.name : t("selectUser")}</span>
-                <Badge
-                  variant={currentUser?.role === "admin" ? "default" : "secondary"}
-                  className="text-[10px] px-1.5 py-0"
-                >
-                  {currentUser?.role || "guest"}
-                </Badge>
-                <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
-              </button>
-            </div>
-
-            {/* Dropdown Menu */}
-            {dropdownOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-30"
-                  onClick={() => setDropdownOpen(false)}
-                />
-                <div className="absolute right-0 z-40 mt-2 w-64 rounded-lg border border-slate-200 bg-white p-2 shadow-lg">
-                  <div className="px-2 py-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                    {t("switchDevRole")}
-                  </div>
-                  <div className="space-y-1">
-                    {devUsers.map((user) => {
-                      const isSelected = currentUser?.id === user.id;
-                      return (
-                        <button
-                          key={user.id}
-                          onClick={() => handleSwitchUser(user.id)}
-                          className={`w-full flex items-center justify-between rounded-md px-2.5 py-2 text-xs font-medium text-left transition-colors cursor-pointer ${
-                            isSelected
-                              ? "bg-slate-900 text-white"
-                              : "text-slate-700 hover:bg-slate-100"
-                          }`}
-                        >
-                          <div>
-                            <div className="font-semibold">{user.name}</div>
-                            <div
-                              className={`text-[10px] ${
-                                isSelected ? "text-slate-300" : "text-slate-400"
-                              }`}
-                            >
-                              {user.email}
-                            </div>
-                          </div>
-                          <Badge
-                            variant={user.role === "admin" ? "default" : "secondary"}
-                            className={`text-[10px] px-1.5 ${
-                              isSelected ? "bg-slate-800 text-white border-slate-700" : ""
+          {/* Dropdown Menu */}
+          {dropdownOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-30"
+                onClick={() => setDropdownOpen(false)}
+              />
+              <div className="absolute right-0 z-40 mt-2 w-64 rounded-lg border border-slate-200 bg-white p-2 shadow-lg">
+                <div className="px-2 py-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  Switch Dev Role / User
+                </div>
+                <div className="space-y-1">
+                  {devUsers.map((user) => {
+                    const isSelected = currentUser?.id === user.id;
+                    return (
+                      <button
+                        key={user.id}
+                        onClick={() => handleSwitchUser(user.id)}
+                        className={`w-full flex items-center justify-between rounded-md px-2.5 py-2 text-xs font-medium text-left transition-colors cursor-pointer ${
+                          isSelected
+                            ? "bg-slate-900 text-white"
+                            : "text-slate-700 hover:bg-slate-100"
+                        }`}
+                      >
+                        <div>
+                          <div className="font-semibold">{user.name}</div>
+                          <div
+                            className={`text-[10px] ${
+                              isSelected ? "text-slate-300" : "text-slate-400"
                             }`}
                           >
-                            {user.role}
-                          </Badge>
-                        </button>
-                      );
-                    })}
-                  </div>
+                            {user.email}
+                          </div>
+                        </div>
+                        <Badge
+                          variant={user.role === "admin" ? "default" : "secondary"}
+                          className={`text-[10px] px-1.5 ${
+                            isSelected ? "bg-slate-800 text-white border-slate-700" : ""
+                          }`}
+                        >
+                          {user.role}
+                        </Badge>
+                      </button>
+                    );
+                  })}
                 </div>
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </header>
