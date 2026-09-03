@@ -45,8 +45,8 @@ export function EditCampaignModal({
       payoutPer1kViews: campaign.payoutPer1kViews,
       totalBudget: campaign.totalBudget,
       status: campaign.status,
-      startsAt: new Date(campaign.startsAt).toISOString().slice(0, 16),
-      endsAt: new Date(campaign.endsAt).toISOString().slice(0, 16),
+      startsAt: new Date(campaign.startsAt).toISOString().slice(0, 10),
+      endsAt: new Date(campaign.endsAt).toISOString().slice(0, 10),
     },
   });
 
@@ -205,29 +205,51 @@ export function EditCampaignModal({
         </div>
 
         {/* Dates */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-700">
-              Start Date & Time
-            </label>
-            <Input type="datetime-local" {...register("startsAt")} />
-            {errors.startsAt && (
-              <p className="text-[11px] text-rose-600">
-                {errors.startsAt.message}
-              </p>
-            )}
+        <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-700">
+                Start Date
+              </label>
+              <Input type="date" {...register("startsAt")} />
+              {errors.startsAt && (
+                <p className="text-[11px] text-rose-600">
+                  {errors.startsAt.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-700">
+                End Date
+              </label>
+              <Input type="date" {...register("endsAt")} />
+              {errors.endsAt && (
+                <p className="text-[11px] text-rose-600">
+                  {errors.endsAt.message}
+                </p>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-700">
-              End Date & Time
-            </label>
-            <Input type="datetime-local" {...register("endsAt")} />
-            {errors.endsAt && (
-              <p className="text-[11px] text-rose-600">
-                {errors.endsAt.message}
-              </p>
-            )}
+          {/* Quick Duration Buttons */}
+          <div className="flex items-center gap-1.5 pt-0.5">
+            <span className="text-[11px] text-slate-400 font-medium">Duration:</span>
+            {[7, 14, 30].map((days) => (
+              <button
+                key={days}
+                type="button"
+                onClick={() => {
+                  const startVal = watch("startsAt");
+                  const baseDate = startVal ? new Date(startVal) : new Date();
+                  const newEnd = new Date(baseDate.getTime() + days * 24 * 60 * 60 * 1000);
+                  setValue("endsAt", newEnd.toISOString().slice(0, 10));
+                }}
+                className="px-2 py-0.5 rounded border border-slate-200 bg-slate-50 hover:bg-slate-100 text-[11px] font-medium text-slate-600 transition-colors cursor-pointer"
+              >
+                +{days} Days
+              </button>
+            ))}
           </div>
         </div>
 
