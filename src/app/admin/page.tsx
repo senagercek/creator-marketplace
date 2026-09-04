@@ -19,6 +19,7 @@ import {
   DollarSign,
   Loader2,
   AlertCircle,
+  ShieldAlert,
 } from "lucide-react";
 import { formatCentsToCurrency, PLATFORMS, Platform, CampaignStatus } from "@/shared/types";
 import { useForm } from "react-hook-form";
@@ -39,6 +40,15 @@ export default function AdminCampaignsPage() {
   });
 
   const utils = trpc.useUtils();
+  const meQuery = trpc.auth.me.useQuery();
+  const switchUserMutation = trpc.auth.switchUser.useMutation({
+    onSuccess: () => {
+      window.location.reload();
+    },
+  });
+  const currentUser = meQuery.data;
+  const isCreator = currentUser && currentUser.role !== "admin";
+
   const createMutation = trpc.campaign.create.useMutation({
     onSuccess: () => {
       utils.campaign.list.invalidate();
@@ -87,6 +97,37 @@ export default function AdminCampaignsPage() {
       endsAt: new Date(data.endsAt).toISOString(),
     });
   };
+
+  if (isCreator) {
+    return (
+      <div className="max-w-xl mx-auto my-12 p-8 rounded-2xl border border-amber-200 bg-amber-50/80 text-center space-y-4 shadow-sm animate-in fade-in-50">
+        <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-amber-100 text-amber-700 shadow-inner">
+          <ShieldAlert className="h-7 w-7" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">Admin Role Required</h2>
+          <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+            You are currently browsing as <strong>{currentUser.name} (Creator)</strong>. In this marketplace, <strong>only Admins create and manage brand campaigns</strong>. Creators browse active campaigns and submit clips.
+          </p>
+        </div>
+        <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link href="/creator" className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full sm:w-auto">
+              Go to Creator Portal
+            </Button>
+          </Link>
+          <Button
+            onClick={() => switchUserMutation.mutateAsync({ userId: "usr_admin_sarah" })}
+            disabled={switchUserMutation.isPending}
+            className="w-full sm:w-auto bg-slate-900 text-white cursor-pointer"
+          >
+            {switchUserMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+            Switch to Sarah (Admin)
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
