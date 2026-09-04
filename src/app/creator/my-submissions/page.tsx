@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { trpc } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,12 @@ import {
   XCircle,
   Loader2,
   AlertCircle,
+  Filter,
 } from "lucide-react";
 import { formatCentsToCurrency } from "@/shared/types";
 
 export default function MySubmissionsPage() {
+  const [filter, setFilter] = useState<string>("all");
   const mySubmissionsQuery = trpc.submission.mySubmissions.useQuery();
   const meQuery = trpc.auth.me.useQuery();
 
@@ -30,6 +32,18 @@ export default function MySubmissionsPage() {
     .reduce((acc, curr) => acc + curr.estimatedEarnings, 0);
 
   const totalViews = submissions.reduce((acc, curr) => acc + curr.currentViews, 0);
+
+  const approvedCount = submissions.filter(
+    (s) => s.status === "approved" || s.status === "paid"
+  ).length;
+  const pendingCount = submissions.filter((s) => s.status === "pending").length;
+  const rejectedCount = submissions.filter((s) => s.status === "rejected").length;
+
+  const filteredSubmissions = submissions.filter((s) => {
+    if (filter === "all") return true;
+    if (filter === "approved") return s.status === "approved" || s.status === "paid";
+    return s.status === filter;
+  });
 
   return (
     <div className="space-y-6">
@@ -61,6 +75,9 @@ export default function MySubmissionsPage() {
             <div className="text-2xl font-bold text-slate-900 font-mono">
               {submissions.length}
             </div>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {approvedCount} approved, {pendingCount} pending
+            </p>
           </CardContent>
         </Card>
 
@@ -75,10 +92,13 @@ export default function MySubmissionsPage() {
             <div className="text-2xl font-bold text-slate-900 font-mono">
               {totalViews.toLocaleString()}
             </div>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Updated via daily ingestion
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-white">
+        <Card className="bg-white border-emerald-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <span className="text-xs font-semibold uppercase text-slate-500">
               Estimated Total Earnings
@@ -89,11 +109,58 @@ export default function MySubmissionsPage() {
             <div className="text-2xl font-bold text-emerald-600 font-mono">
               {formatCentsToCurrency(totalEarned)}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-[11px] text-emerald-700 font-medium mt-1">
               From approved clip views
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
+        <button
+          onClick={() => setFilter("all")}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            filter === "all"
+              ? "bg-slate-900 text-white shadow-xs"
+              : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+          }`}
+        >
+          All ({submissions.length})
+        </button>
+        <button
+          onClick={() => setFilter("approved")}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            filter === "approved"
+              ? "bg-emerald-700 text-white shadow-xs"
+              : "bg-white text-emerald-700 hover:bg-emerald-50 border border-emerald-200"
+          }`}
+        >
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          <span>Approved ({approvedCount})</span>
+        </button>
+        <button
+          onClick={() => setFilter("pending")}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            filter === "pending"
+              ? "bg-amber-600 text-white shadow-xs"
+              : "bg-white text-amber-700 hover:bg-amber-50 border border-amber-200"
+          }`}
+        >
+          <Clock className="h-3.5 w-3.5" />
+          <span>Pending ({pendingCount})</span>
+        </button>
+        <button
+          onClick={() => setFilter("rejected")}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            filter === "rejected"
+              ? "bg-rose-600 text-white shadow-xs"
+              : "bg-white text-rose-700 hover:bg-rose-50 border border-rose-200"
+          }`}
+        >
+          <XCircle className="h-3.5 w-3.5" />
+          <span>Rejected ({rejectedCount})</span>
+        </button>
       </div>
 
       {/* Submissions List */}
@@ -103,11 +170,11 @@ export default function MySubmissionsPage() {
             <div className="p-16 flex justify-center">
               <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
             </div>
-          ) : submissions.length === 0 ? (
+          ) : filteredSubmissions.length === 0 ? (
             <div className="p-12 text-center text-slate-500 space-y-3">
-              <p className="font-medium">You have not submitted any clips yet.</p>
+              <p className="font-medium">No submissions found for this filter.</p>
               <p className="text-xs text-slate-400">
-                Browse active brand campaigns and submit your first video URL!
+                Browse active brand campaigns and submit your video clips!
               </p>
               <Link href="/creator">
                 <Button size="sm" className="mt-2">
@@ -129,14 +196,21 @@ export default function MySubmissionsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {submissions.map((sub) => (
-                    <tr key={sub.id} className="hover:bg-slate-50/70 transition-colors">
+                  {filteredSubmissions.map((sub) => (
+                    <tr
+                      key={sub.id}
+                      className={`hover:bg-slate-50/70 transition-colors ${
+                        sub.status === "approved" || sub.status === "paid"
+                          ? "bg-emerald-50/20"
+                          : ""
+                      }`}
+                    >
                       <td className="px-6 py-4 font-medium text-slate-900">
                         {sub.campaignTitle}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
+                          <span className="text-xs font-mono uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-medium">
                             {sub.platform}
                           </span>
                           <a
@@ -144,6 +218,7 @@ export default function MySubmissionsPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:underline font-mono truncate max-w-xs"
+                            title={`Open post on ${sub.platform}`}
                           >
                             <span className="truncate">{sub.postUrl}</span>
                             <ExternalLink className="h-3 w-3 shrink-0" />
@@ -155,7 +230,12 @@ export default function MySubmissionsPage() {
                       </td>
                       <td className="px-6 py-4 font-mono font-semibold text-emerald-600">
                         {sub.status === "approved" || sub.status === "paid" ? (
-                          formatCentsToCurrency(sub.estimatedEarnings)
+                          <div className="flex items-center gap-1.5">
+                            <span>{formatCentsToCurrency(sub.estimatedEarnings)}</span>
+                            <Badge variant="approved" className="text-[10px] py-0 px-1">
+                              earned
+                            </Badge>
+                          </div>
                         ) : (
                           <span className="text-slate-400 font-normal text-xs">
                             Pending approval
