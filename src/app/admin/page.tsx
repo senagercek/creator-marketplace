@@ -76,7 +76,7 @@ export default function AdminCampaignsPage() {
     resolver: zodResolver(campaignFormSchema),
     defaultValues: {
       title: "",
-      platforms: ["tiktok", "instagram"],
+      platforms: ["tiktok", "instagram", "youtube"],
       payoutPer1kViews: 500, // 500 cents = $5.00
       totalBudget: 25000, // 25000 cents = $250.00
       status: "active",

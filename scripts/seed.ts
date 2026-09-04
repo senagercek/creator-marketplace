@@ -52,7 +52,7 @@ async function seed() {
         {
           id: "cmp_glow_summer",
           title: "Summer Glow Skincare Launch",
-          platforms: ["tiktok", "instagram"],
+          platforms: ["tiktok", "instagram", "youtube"],
           payoutPer1kViews: 500, // $5.00 per 1k views
           totalBudget: 15000, // $150.00 total budget
           status: "active",
@@ -62,7 +62,7 @@ async function seed() {
         {
           id: "cmp_wireless_sound",
           title: "Aura Audio Pro Earbuds Review",
-          platforms: ["youtube", "tiktok"],
+          platforms: ["youtube", "tiktok", "instagram"],
           payoutPer1kViews: 1000, // $10.00 per 1k views
           totalBudget: 40000, // $400.00 total budget
           status: "active",
