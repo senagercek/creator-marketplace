@@ -46,7 +46,7 @@
    ```bash
    pnpm dev
    ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser. Use the top-right **[DEV AUTH]** user switcher to toggle between Admin and Creator roles.
+   Open [http://localhost:3000](http://localhost:3000) in your browser. Use the top-right user profile switcher to toggle between Admin and Creator roles.
 
 7. **Run Daily Metrics Ingestion:**
    ```bash
