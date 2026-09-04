@@ -24,6 +24,7 @@ import {
   Calendar,
   Edit3,
   ShieldAlert,
+  AlertCircle,
 } from "lucide-react";
 import { formatCentsToCurrency, SubmissionStatus } from "@/shared/types";
 import { EditCampaignModal } from "@/components/EditCampaignModal";
@@ -35,6 +36,7 @@ export default function CampaignDetailPage() {
 
   const [rejectingSubId, setRejectingSubId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [rejectionErrorMessage, setRejectionErrorMessage] = useState<string | null>(null);
   const [submissionFilter, setSubmissionFilter] = useState<SubmissionStatus | "all">("all");
   const [approvalErrorMessage, setApprovalErrorMessage] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -73,7 +75,12 @@ export default function CampaignDetailPage() {
     onSuccess: () => {
       setRejectingSubId(null);
       setRejectionReason("");
+      setRejectionErrorMessage(null);
       utils.submission.listByCampaign.invalidate({ campaignId });
+      utils.campaign.getById.invalidate({ id: campaignId });
+    },
+    onError: (err) => {
+      setRejectionErrorMessage(err.message);
     },
   });
 
@@ -85,10 +92,15 @@ export default function CampaignDetailPage() {
   const handleRejectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rejectingSubId || rejectionReason.trim().length < 3) return;
-    await rejectMutation.mutateAsync({
-      submissionId: rejectingSubId,
-      rejectionReason: rejectionReason.trim(),
-    });
+    setRejectionErrorMessage(null);
+    try {
+      await rejectMutation.mutateAsync({
+        submissionId: rejectingSubId,
+        rejectionReason: rejectionReason.trim(),
+      });
+    } catch (err: any) {
+      setRejectionErrorMessage(err.message || "Failed to reject submission.");
+    }
   };
 
   if (isCreator) {
@@ -462,11 +474,21 @@ export default function CampaignDetailPage() {
       {/* Reject Reason Modal */}
       <Modal
         isOpen={rejectingSubId !== null}
-        onClose={() => setRejectingSubId(null)}
+        onClose={() => {
+          setRejectingSubId(null);
+          setRejectionErrorMessage(null);
+        }}
         title="Reject Submission"
         description="Please provide a clear reason for rejecting this clip submission (required)."
       >
         <form onSubmit={handleRejectSubmit} className="space-y-4">
+          {rejectionErrorMessage && (
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs flex gap-2 items-start">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>{rejectionErrorMessage}</span>
+            </div>
+          )}
+
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700">
               Rejection Reason
