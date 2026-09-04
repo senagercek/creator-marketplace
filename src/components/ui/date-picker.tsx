@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -48,10 +49,22 @@ export function DatePicker({
   error,
   className = "",
 }: DatePickerProps) {
+  const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
   const [monthDropdownOpen, setMonthDropdownOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [popoverCoords, setPopoverCoords] = useState<{
+    top: number;
+    left: number;
+    openUp: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Parse initial selected date or default to today
   const selectedDate = value ? new Date(value + "T00:00:00") : null;
@@ -74,12 +87,60 @@ export function DatePicker({
     }
   }, [value]);
 
+  const updatePosition = useCallback(() => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    if (rect.bottom < 0 || rect.top > window.innerHeight) {
+      setIsOpen(false);
+      return;
+    }
+    const popoverHeight = 350;
+    const popoverWidth = 315;
+
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUp = spaceBelow < popoverHeight && rect.top > popoverHeight;
+
+    let top = openUp ? rect.top - popoverHeight - 6 : rect.bottom + 6;
+    let left = rect.left;
+
+    if (left + popoverWidth > window.innerWidth - 12) {
+      left = Math.max(12, rect.right - popoverWidth);
+    }
+    if (left < 12) {
+      left = 12;
+    }
+    if (top < 12) {
+      top = 12;
+    }
+
+    setPopoverCoords({ top, left, openUp });
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    updatePosition();
+
+    const handleScrollOrResize = () => {
+      updatePosition();
+    };
+
+    window.addEventListener("scroll", handleScrollOrResize, true);
+    window.addEventListener("resize", handleScrollOrResize);
+    return () => {
+      window.removeEventListener("scroll", handleScrollOrResize, true);
+      window.removeEventListener("resize", handleScrollOrResize);
+    };
+  }, [isOpen, updatePosition]);
+
   // Handle outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
       if (
         containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
+        !containerRef.current.contains(target) &&
+        popoverRef.current &&
+        !popoverRef.current.contains(target)
       ) {
         setIsOpen(false);
         setYearDropdownOpen(false);
@@ -206,8 +267,12 @@ export function DatePicker({
 
       {/* Input Trigger Button */}
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => {
+          if (!isOpen) {
+            updatePosition();
+          }
           setIsOpen(!isOpen);
           setYearDropdownOpen(false);
           setMonthDropdownOpen(false);
@@ -233,9 +298,19 @@ export function DatePicker({
 
       {error && <p className="text-[11px] text-rose-600">{error}</p>}
 
-      {/* Calendar Dropdown Popover */}
-      {isOpen && (
-        <div className="absolute left-0 z-50 mt-1 w-full max-w-[320px] rounded-xl border border-slate-200 bg-white p-3 shadow-xl ring-1 ring-black/5 animate-in fade-in-50 zoom-in-95">
+      {/* Calendar Dropdown Popover via Portal */}
+      {mounted && isOpen && popoverCoords && createPortal(
+        <div
+          ref={popoverRef}
+          style={{
+            position: "fixed",
+            top: `${popoverCoords.top}px`,
+            left: `${popoverCoords.left}px`,
+            width: "315px",
+            zIndex: 9999,
+          }}
+          className="rounded-xl border border-slate-200 bg-white p-3 shadow-2xl ring-1 ring-black/10 animate-in fade-in-50 zoom-in-95"
+        >
           {/* Header (Custom Month & Year Dropdowns + Nav) */}
           <div className="relative flex items-center justify-between gap-1.5 pb-2.5 mb-2.5 border-b border-slate-100">
             <div className="flex items-center gap-1.5">
@@ -431,7 +506,8 @@ export function DatePicker({
               Close
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
