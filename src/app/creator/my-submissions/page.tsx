@@ -234,16 +234,16 @@ export default function MySubmissionsPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+              <table className="w-full text-left text-sm min-w-[960px]">
                 <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
                   <tr>
-                    <th className="px-6 py-3.5">Campaign</th>
-                    <th className="px-6 py-3.5">Platform & Link</th>
-                    <th className="px-6 py-3.5">Current Views</th>
-                    <th className="px-6 py-3.5">Estimated Earnings</th>
-                    <th className="px-6 py-3.5">Status</th>
-                    <th className="px-6 py-3.5">Submitted On</th>
-                    <th className="px-6 py-3.5 text-right">Actions</th>
+                    <th className="px-6 py-3.5 min-w-[220px]">Campaign</th>
+                    <th className="px-6 py-3.5 min-w-[240px]">Platform & Link</th>
+                    <th className="px-6 py-3.5 min-w-[120px]">Current Views</th>
+                    <th className="px-6 py-3.5 min-w-[140px]">Estimated Earnings</th>
+                    <th className="px-6 py-3.5 min-w-[150px]">Status</th>
+                    <th className="px-6 py-3.5 min-w-[120px]">Submitted On</th>
+                    <th className="px-6 py-3.5 min-w-[140px] text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -256,10 +256,12 @@ export default function MySubmissionsPage() {
                           : ""
                       }`}
                     >
-                      <td className="px-6 py-4 font-medium text-slate-900">
-                        {sub.campaignTitle}
+                      <td className="px-6 py-4 align-middle">
+                        <div className="font-semibold text-slate-900 line-clamp-2">
+                          {sub.campaignTitle}
+                        </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 align-middle">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-mono uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-medium">
                             {sub.platform}
@@ -276,10 +278,10 @@ export default function MySubmissionsPage() {
                           </a>
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-mono font-medium text-slate-900">
+                      <td className="px-6 py-4 font-mono font-medium text-slate-900 align-middle">
                         {sub.currentViews.toLocaleString()} views
                       </td>
-                      <td className="px-6 py-4 font-mono font-semibold text-emerald-600">
+                      <td className="px-6 py-4 font-mono font-semibold text-emerald-600 align-middle">
                         {sub.status === "approved" || sub.status === "paid" ? (
                           <div className="flex items-center gap-1.5">
                             <span>{formatCentsToCurrency(sub.estimatedEarnings)}</span>
@@ -288,12 +290,12 @@ export default function MySubmissionsPage() {
                             </Badge>
                           </div>
                         ) : (
-                          <span className="text-slate-400 font-normal text-xs">
-                            Pending approval
+                          <span className="text-slate-400 font-normal text-xs font-mono">
+                            —
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 align-middle">
                         <div className="space-y-1">
                           <Badge variant={sub.status}>{sub.status}</Badge>
                           {sub.rejectionReason && (
@@ -302,22 +304,12 @@ export default function MySubmissionsPage() {
                               <span>Reason: {sub.rejectionReason}</span>
                             </div>
                           )}
-                          {sub.status === "rejected" && (
-                            <div className="pt-1">
-                              <Link
-                                href="/creator"
-                                className="inline-flex items-center text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer"
-                              >
-                                Re-apply to Campaign &rarr;
-                              </Link>
-                            </div>
-                          )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-xs text-slate-500">
+                      <td className="px-6 py-4 text-xs text-slate-500 font-mono align-middle">
                         {new Date(sub.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right align-middle">
                         {sub.status === "pending" ? (
                           confirmWithdrawId === sub.id ? (
                             <div className="flex items-center justify-end gap-1.5 animate-in fade-in">
@@ -366,13 +358,15 @@ export default function MySubmissionsPage() {
                             </div>
                           )
                         ) : sub.status === "approved" || sub.status === "paid" ? (
-                          <span className="text-[11px] font-medium text-slate-400 inline-flex items-center gap-1 justify-end">
-                            <Lock className="h-3 w-3 text-slate-400" />
-                            Locked
-                          </span>
+                          <div className="flex justify-end">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200/80">
+                              <Lock className="h-3 w-3 text-slate-400" />
+                              <span>Locked</span>
+                            </span>
+                          </div>
                         ) : (
                           <Link href="/creator">
-                            <Button size="sm" variant="outline" className="text-xs h-7 px-2 text-indigo-600 border-indigo-200 hover:bg-indigo-50 cursor-pointer">
+                            <Button size="sm" variant="outline" className="text-xs h-7 px-2.5 text-indigo-600 border-indigo-200 hover:bg-indigo-50 cursor-pointer">
                               Re-apply
                             </Button>
                           </Link>
