@@ -3,7 +3,7 @@ import { db } from "../src/server/db";
 import { campaigns, submissions, submissionMetrics, users } from "../src/server/db/schema";
 import { runIngest } from "../scripts/ingest";
 import { mockAdmin, mockCreator1 } from "./helpers";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 
 describe("Daily Metrics Ingestion (pnpm ingest)", () => {
   // Use unique test dates to prevent collision across test runs
@@ -131,6 +131,9 @@ describe("Daily Metrics Ingestion (pnpm ingest)", () => {
   });
 
   afterAll(async () => {
+    await db
+      .delete(submissionMetrics)
+      .where(inArray(submissionMetrics.capturedAt, [testDate, failureDate]));
     await db.delete(campaigns).where(eq(campaigns.id, campaignId));
   });
 });

@@ -114,9 +114,10 @@ export async function runIngest(options: IngestOptions = {}) {
   };
 }
 
-// When run directly via CLI (pnpm ingest)
+// When run directly via CLI (pnpm ingest [YYYY-MM-DD])
 if (process.argv[1]?.endsWith("ingest.ts")) {
-  runIngest()
+  const dateArg = process.argv[2];
+  runIngest({ dateOverride: dateArg })
     .then(() => pool.end())
     .catch((err) => {
       console.error("[Ingest Fatal Error]", err);
