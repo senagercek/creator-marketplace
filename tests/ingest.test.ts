@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { db } from "../src/server/db";
 import { campaigns, submissions, submissionMetrics, users } from "../src/server/db/schema";
 import { runIngest } from "../scripts/ingest";
@@ -128,5 +128,9 @@ describe("Daily Metrics Ingestion (pnpm ingest)", () => {
     });
     expect(m2).toBeDefined();
     expect(m2!.views).toBeGreaterThan(2000);
+  });
+
+  afterAll(async () => {
+    await db.delete(campaigns).where(eq(campaigns.id, campaignId));
   });
 });

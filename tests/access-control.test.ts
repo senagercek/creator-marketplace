@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { db } from "../src/server/db";
 import { campaigns, submissions, users } from "../src/server/db/schema";
+import { eq } from "drizzle-orm";
 import {
   createCallerForUser,
   mockAdmin,
@@ -110,5 +111,9 @@ describe("Access Control & Ownership Enforcement", () => {
         postUrl: "https://www.youtube.com/shorts/abcd1234efg",
       })
     ).rejects.toThrow(/does not accept submissions from youtube/i);
+  });
+
+  afterAll(async () => {
+    await db.delete(campaigns).where(eq(campaigns.id, campaignId));
   });
 });

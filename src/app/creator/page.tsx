@@ -21,6 +21,10 @@ import {
   XCircle,
   Plus,
   Sparkles,
+  Search,
+  Filter,
+  X,
+  Layers,
 } from "lucide-react";
 import { formatCentsToCurrency, Platform, PLATFORMS, isValidPlatformUrl } from "@/shared/types";
 
@@ -31,7 +35,14 @@ export default function CreatorBrowsePage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const activeCampaignsQuery = trpc.campaign.listActiveForCreators.useQuery();
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "completed">("all");
+  const [participationFilter, setParticipationFilter] = useState<"all" | "available" | "joined">("all");
+
+  const campaignsQuery = trpc.campaign.listActiveForCreators.useQuery({
+    status: statusFilter === "all" ? undefined : statusFilter,
+    search: search.trim() ? search.trim() : undefined,
+  });
   const mySubmissionsQuery = trpc.submission.mySubmissions.useQuery();
   const meQuery = trpc.auth.me.useQuery();
 
@@ -42,6 +53,7 @@ export default function CreatorBrowsePage() {
       setErrorMessage(null);
       setPostUrl("");
       utils.submission.mySubmissions.invalidate();
+      utils.campaign.listActiveForCreators.invalidate();
     },
     onError: (err) => {
       setErrorMessage(err.message);
@@ -78,6 +90,7 @@ export default function CreatorBrowsePage() {
 
   const isUrlValid = postUrl.trim().length > 0 && isValidPlatformUrl(selectedPlatform, postUrl);
 
+  const allCampaigns = campaignsQuery.data || [];
   const mySubmissions = mySubmissionsQuery.data || [];
   const approvedSubs = mySubmissions.filter(
     (s) => s.status === "approved" || s.status === "paid"
@@ -85,16 +98,27 @@ export default function CreatorBrowsePage() {
   const totalEarned = approvedSubs.reduce((acc, curr) => acc + curr.estimatedEarnings, 0);
   const totalViews = mySubmissions.reduce((acc, curr) => acc + curr.currentViews, 0);
 
+  const joinedCampaignIds = new Set(mySubmissions.map((s) => s.campaignId));
+  const availableCount = allCampaigns.filter((c) => !joinedCampaignIds.has(c.id)).length;
+  const joinedCount = allCampaigns.filter((c) => joinedCampaignIds.has(c.id)).length;
+
+  const filteredCampaigns = allCampaigns.filter((camp) => {
+    const hasSubmitted = joinedCampaignIds.has(camp.id);
+    if (participationFilter === "available") return !hasSubmitted;
+    if (participationFilter === "joined") return hasSubmitted;
+    return true;
+  });
+
   return (
     <div className="space-y-6">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Active Creator Campaigns
+            Creator Campaigns & Opportunities
           </h1>
           <p className="text-sm text-slate-500">
-            Select an active campaign, submit your published short-form clips, and earn per 1,000 views.
+            Browse all brand campaigns, submit your short-form clips, and earn per 1,000 views.
           </p>
         </div>
         <Link href="/creator/my-submissions">
@@ -140,19 +164,143 @@ export default function CreatorBrowsePage() {
         </div>
       )}
 
+      {/* Filter and Search Controls */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+        {/* Participation Tabs */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+          <button
+            type="button"
+            onClick={() => setParticipationFilter("all")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer ${
+              participationFilter === "all"
+                ? "bg-slate-900 text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            <span>All Campaigns</span>
+            <span
+              className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                participationFilter === "all"
+                  ? "bg-slate-700 text-white"
+                  : "bg-white text-slate-600 border border-slate-200"
+              }`}
+            >
+              {allCampaigns.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setParticipationFilter("available")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer ${
+              participationFilter === "available"
+                ? "bg-slate-900 text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            <span>Available to Join</span>
+            <span
+              className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                participationFilter === "available"
+                  ? "bg-slate-700 text-white"
+                  : "bg-white text-slate-600 border border-slate-200"
+              }`}
+            >
+              {availableCount}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setParticipationFilter("joined")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer ${
+              participationFilter === "joined"
+                ? "bg-slate-900 text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            <span>Joined / My Clips</span>
+            <span
+              className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                participationFilter === "joined"
+                  ? "bg-slate-700 text-white"
+                  : "bg-white text-slate-600 border border-slate-200"
+              }`}
+            >
+              {joinedCount}
+            </span>
+          </button>
+        </div>
+
+        {/* Right side: Search + Status Selector */}
+        <div className="flex items-center gap-2">
+          {/* Search Box */}
+          <div className="relative flex-1 md:w-60">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search campaigns..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 bg-slate-50/50"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Status Dropdown */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
+          >
+            <option value="all">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+      </div>
+
       {/* Campaigns Grid */}
-      {activeCampaignsQuery.isLoading ? (
+      {campaignsQuery.isLoading ? (
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
         </div>
-      ) : !activeCampaignsQuery.data || activeCampaignsQuery.data.length === 0 ? (
-        <Card className="p-12 text-center text-slate-500">
-          <p className="font-medium">No active campaigns right now.</p>
-          <p className="text-xs text-slate-400 mt-1">Check back soon for new brand launches.</p>
+      ) : filteredCampaigns.length === 0 ? (
+        <Card className="p-12 text-center text-slate-500 space-y-3">
+          <p className="font-medium text-slate-800">No campaigns match your filter.</p>
+          <p className="text-xs text-slate-400">
+            {participationFilter === "available"
+              ? "You have already submitted clips to all available campaigns!"
+              : participationFilter === "joined"
+              ? "You have not submitted clips to any campaigns yet. Check 'Available to Join'!"
+              : "No campaigns found. Try resetting your search or status filter."}
+          </p>
+          {(participationFilter !== "all" || statusFilter !== "all" || search) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setParticipationFilter("all");
+                setStatusFilter("all");
+                setSearch("");
+              }}
+              className="mt-2"
+            >
+              Reset Filters
+            </Button>
+          )}
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {activeCampaignsQuery.data.map((camp) => {
+          {filteredCampaigns.map((camp) => {
             // Check if creator has submitted to this campaign
             const userSubsForCamp = mySubmissions.filter((s) => s.campaignId === camp.id);
             const latestSub = userSubsForCamp[0]; // Most recent
@@ -161,12 +309,16 @@ export default function CreatorBrowsePage() {
               <Card
                 key={camp.id}
                 className={`flex flex-col justify-between hover:shadow-md transition-shadow ${
-                  latestSub?.status === "approved" ? "border-emerald-200 ring-1 ring-emerald-200/50" : ""
+                  latestSub?.status === "approved"
+                    ? "border-emerald-200 ring-1 ring-emerald-200/50"
+                    : camp.status === "completed"
+                    ? "opacity-90 bg-slate-50/40"
+                    : ""
                 }`}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between gap-2">
-                    <Badge variant="active" className="text-[11px] capitalize">
+                    <Badge variant={camp.status as any} className="text-[11px] capitalize">
                       {camp.status}
                     </Badge>
                     <div className="flex gap-1">
@@ -197,7 +349,7 @@ export default function CreatorBrowsePage() {
                   </div>
 
                   {/* Creator Submission Status Indicator */}
-                  {latestSub && (
+                  {latestSub ? (
                     <div
                       className={`rounded-lg p-2.5 space-y-1 ${
                         latestSub.status === "approved" || latestSub.status === "paid"
@@ -246,6 +398,17 @@ export default function CreatorBrowsePage() {
                         </p>
                       )}
                     </div>
+                  ) : (
+                    <div className="rounded-lg p-2.5 bg-slate-50 border border-slate-200/60 text-slate-600 text-xs flex items-center gap-2">
+                      <Video className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span>
+                        {camp.status === "active"
+                          ? "Open for clips — submit your link to start earning"
+                          : camp.status === "completed"
+                          ? "Campaign completed (Budget ceiling reached)"
+                          : `Campaign is currently ${camp.status}`}
+                      </span>
+                    </div>
                   )}
 
                   <div className="flex items-center gap-1.5 text-xs text-slate-500">
@@ -264,31 +427,75 @@ export default function CreatorBrowsePage() {
                           View Earnings
                         </Button>
                       </Link>
-                      <Button
-                        variant="outline"
-                        className="gap-1 text-xs"
-                        onClick={() => handleOpenSubmitModal(camp)}
-                      >
-                        <Plus className="h-3 w-3" />
-                        <span>Submit Another</span>
-                      </Button>
+                      {camp.status === "active" && (
+                        <Button
+                          variant="outline"
+                          className="gap-1 text-xs"
+                          onClick={() => handleOpenSubmitModal(camp)}
+                        >
+                          <Plus className="h-3 w-3" />
+                          <span>Submit Another</span>
+                        </Button>
+                      )}
                     </div>
                   ) : latestSub?.status === "pending" ? (
-                    <Button
-                      variant="outline"
-                      className="w-full gap-1.5 text-xs text-slate-600"
-                      onClick={() => handleOpenSubmitModal(camp)}
-                    >
-                      <Plus className="h-3 w-3" />
-                      <span>Submit Another Clip</span>
-                    </Button>
-                  ) : (
+                    <div className="flex items-center gap-2 w-full">
+                      <Link href="/creator/my-submissions" className="flex-1">
+                        <Button variant="outline" className="w-full text-xs">
+                          View Status
+                        </Button>
+                      </Link>
+                      {camp.status === "active" && (
+                        <Button
+                          variant="outline"
+                          className="gap-1 text-xs"
+                          onClick={() => handleOpenSubmitModal(camp)}
+                        >
+                          <Plus className="h-3 w-3" />
+                          <span>Submit Another</span>
+                        </Button>
+                      )}
+                    </div>
+                  ) : latestSub?.status === "rejected" ? (
+                    <div className="flex items-center gap-2 w-full">
+                      <Link href="/creator/my-submissions" className="flex-1">
+                        <Button variant="outline" className="w-full text-xs text-rose-700 hover:text-rose-800">
+                          View Reason
+                        </Button>
+                      </Link>
+                      {camp.status === "active" && (
+                        <Button
+                          className="gap-1.5 text-xs"
+                          onClick={() => handleOpenSubmitModal(camp)}
+                        >
+                          <Send className="h-3.5 w-3.5" />
+                          <span>Resubmit Clip</span>
+                        </Button>
+                      )}
+                    </div>
+                  ) : camp.status === "active" ? (
                     <Button
                       className="w-full gap-2"
                       onClick={() => handleOpenSubmitModal(camp)}
                     >
                       <Send className="h-3.5 w-3.5" />
                       <span>Submit Video Clip</span>
+                    </Button>
+                  ) : camp.status === "completed" ? (
+                    <Button
+                      variant="outline"
+                      disabled
+                      className="w-full text-xs bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                    >
+                      Campaign Ended (Budget Reached)
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      disabled
+                      className="w-full text-xs bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed capitalize"
+                    >
+                      Campaign {camp.status}
                     </Button>
                   )}
                 </CardFooter>

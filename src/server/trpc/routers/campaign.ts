@@ -56,13 +56,41 @@ export const campaignRouter = router({
       };
     }),
 
-  listActiveForCreators: publicProcedure.query(async ({ ctx }) => {
-    return await ctx.db
-      .select()
-      .from(campaigns)
-      .where(eq(campaigns.status, "active"))
-      .orderBy(desc(campaigns.createdAt));
-  }),
+  listActiveForCreators: publicProcedure
+    .input(
+      z
+        .object({
+          status: z.enum(["all", "active", "completed", "paused", "draft"]).optional(),
+          search: z.string().optional(),
+        })
+        .optional()
+    )
+    .query(async ({ ctx, input }) => {
+      const status = input?.status || "all";
+      const search = input?.search?.trim();
+
+      const conditions = [];
+
+      if (process.env.NODE_ENV !== "test") {
+        conditions.push(sql`${campaigns.id} NOT LIKE 'test_cmp_%'`);
+      }
+
+      if (status && status !== "all") {
+        conditions.push(eq(campaigns.status, status));
+      }
+
+      if (search && search !== "") {
+        conditions.push(ilike(campaigns.title, `%${search}%`));
+      }
+
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+      return await ctx.db
+        .select()
+        .from(campaigns)
+        .where(whereClause)
+        .orderBy(desc(campaigns.createdAt));
+    }),
 
   getById: publicProcedure
     .input(z.object({ id: z.string() }))

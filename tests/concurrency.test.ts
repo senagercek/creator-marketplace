@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { db } from "../src/server/db";
 import { campaigns, submissions, submissionMetrics, users } from "../src/server/db/schema";
 import { createCallerForUser, mockAdmin, mockCreator1 } from "./helpers";
@@ -102,5 +102,9 @@ describe("Concurrent Approvals & Race Condition Protection", () => {
       where: eq(campaigns.id, campaignId),
     });
     expect(camp?.status).toBe("active");
+  });
+
+  afterAll(async () => {
+    await db.delete(campaigns).where(eq(campaigns.id, campaignId));
   });
 });
