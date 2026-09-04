@@ -26,12 +26,14 @@ import { formatCentsToCurrency, PLATFORMS, Platform, CampaignStatus } from "@/sh
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { campaignFormSchema, CampaignFormValues } from "@/shared/schemas/campaign";
+import { EditCampaignModal } from "@/components/EditCampaignModal";
 
 export default function AdminCampaignsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<CampaignStatus | undefined>(undefined);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<any | null>(null);
 
   const campaignsQuery = trpc.campaign.list.useQuery({
     page,
@@ -261,12 +263,22 @@ export default function AdminCampaignsPage() {
                         {new Date(camp.endsAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Link href={`/admin/campaigns/${camp.id}`}>
-                          <Button variant="outline" size="sm" className="gap-1">
-                            <span>Review & Detail</span>
-                            <ExternalLink className="h-3 w-3" />
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingCampaign(camp)}
+                            className="text-xs text-slate-600 hover:text-slate-900 cursor-pointer"
+                          >
+                            Edit
                           </Button>
-                        </Link>
+                          <Link href={`/admin/campaigns/${camp.id}`}>
+                            <Button variant="outline" size="sm" className="gap-1 text-xs cursor-pointer">
+                              <span>Review</span>
+                              <ExternalLink className="h-3 w-3" />
+                            </Button>
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -475,6 +487,18 @@ export default function AdminCampaignsPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Edit Campaign Modal */}
+      {editingCampaign && (
+        <EditCampaignModal
+          campaign={editingCampaign}
+          isOpen={!!editingCampaign}
+          onClose={() => setEditingCampaign(null)}
+          onUpdated={() => {
+            campaignsQuery.refetch();
+          }}
+        />
+      )}
     </div>
   );
 }

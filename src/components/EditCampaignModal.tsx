@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { campaignFormSchema, CampaignFormValues } from "@/shared/schemas/campaign";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PLATFORMS, Platform, formatCentsToCurrency, CAMPAIGN_STATUSES } from "@/shared/types";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, Trash2 } from "lucide-react";
 
 interface EditCampaignModalProps {
   campaign: any;
@@ -25,10 +25,22 @@ export function EditCampaignModal({
   onClose,
   onUpdated,
 }: EditCampaignModalProps) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   const updateMutation = trpc.campaign.update.useMutation({
     onSuccess: () => {
       onUpdated();
       onClose();
+    },
+  });
+
+  const deleteMutation = trpc.campaign.delete.useMutation({
+    onSuccess: () => {
+      onUpdated();
+      onClose();
+      if (typeof window !== "undefined" && window.location.pathname.includes(`/admin/campaigns/${campaign.id}`)) {
+        window.location.href = "/admin";
+      }
     },
   });
 
@@ -245,25 +257,71 @@ export function EditCampaignModal({
           </div>
         </div>
 
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-3 border-t border-slate-100">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            className="w-full sm:w-auto"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting || updateMutation.isPending}
-            className="w-full sm:w-auto"
-          >
-            {updateMutation.isPending && (
-              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+        {deleteMutation.error && (
+          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs flex gap-2 items-center">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{deleteMutation.error.message}</span>
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-slate-100">
+          <div>
+            {!confirmDelete ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setConfirmDelete(true)}
+                className="w-full sm:w-auto text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 text-xs cursor-pointer"
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1.5 text-rose-500" />
+                Delete Campaign
+              </Button>
+            ) : (
+              <div className="flex items-center gap-2 animate-in fade-in">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => deleteMutation.mutate({ id: campaign.id })}
+                  className="text-xs cursor-pointer bg-rose-600 hover:bg-rose-700 text-white"
+                >
+                  {deleteMutation.isPending && (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                  )}
+                  Confirm Delete
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  className="text-xs text-slate-500 hover:text-slate-700 px-2 py-1 rounded cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
             )}
-            Save Changes
-          </Button>
+          </div>
+
+          <div className="flex flex-col-reverse sm:flex-row gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting || updateMutation.isPending || deleteMutation.isPending}
+              className="w-full sm:w-auto"
+            >
+              {updateMutation.isPending && (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              )}
+              Save Changes
+            </Button>
+          </div>
         </div>
       </form>
     </Modal>

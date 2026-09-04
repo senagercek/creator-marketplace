@@ -271,4 +271,22 @@ export const campaignRouter = router({
 
       return updated;
     }),
+
+  delete: adminProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const campaign = await ctx.db.query.campaigns.findFirst({
+        where: eq(campaigns.id, input.id),
+      });
+
+      if (!campaign) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Campaign not found",
+        });
+      }
+
+      await ctx.db.delete(campaigns).where(eq(campaigns.id, input.id));
+      return { success: true, id: input.id };
+    }),
 });
