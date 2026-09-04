@@ -6,6 +6,8 @@ import { trpc } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Modal } from "@/components/ui/modal";
+import { Input } from "@/components/ui/input";
 import {
   ExternalLink,
   Eye,
@@ -16,13 +18,61 @@ import {
   Loader2,
   AlertCircle,
   Filter,
+  Edit3,
+  Trash2,
+  Lock,
 } from "lucide-react";
-import { formatCentsToCurrency } from "@/shared/types";
+import { formatCentsToCurrency, isValidPlatformUrl, Platform } from "@/shared/types";
 
 export default function MySubmissionsPage() {
   const [filter, setFilter] = useState<string>("all");
+  const [editingSub, setEditingSub] = useState<any | null>(null);
+  const [editUrl, setEditUrl] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
+  const [confirmWithdrawId, setConfirmWithdrawId] = useState<string | null>(null);
+
+  const utils = trpc.useUtils();
   const mySubmissionsQuery = trpc.submission.mySubmissions.useQuery();
   const meQuery = trpc.auth.me.useQuery();
+
+  const withdrawMutation = trpc.submission.withdraw.useMutation({
+    onSuccess: () => {
+      setConfirmWithdrawId(null);
+      utils.submission.mySubmissions.invalidate();
+    },
+  });
+
+  const updateUrlMutation = trpc.submission.updateUrl.useMutation({
+    onSuccess: () => {
+      setEditingSub(null);
+      setEditUrl("");
+      setEditError(null);
+      utils.submission.mySubmissions.invalidate();
+    },
+    onError: (err) => {
+      setEditError(err.message);
+    },
+  });
+
+  const handleStartEdit = (sub: any) => {
+    setEditingSub(sub);
+    setEditUrl(sub.postUrl);
+    setEditError(null);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSub) return;
+    if (!isValidPlatformUrl(editingSub.platform as Platform, editUrl.trim())) {
+      setEditError(`The URL must be a valid ${editingSub.platform} post URL.`);
+      return;
+    }
+    setEditError(null);
+    await updateUrlMutation.mutateAsync({
+      id: editingSub.id,
+      postUrl: editUrl.trim(),
+    });
+  };
 
   const submissions = mySubmissionsQuery.data || [];
 
@@ -193,6 +243,7 @@ export default function MySubmissionsPage() {
                     <th className="px-6 py-3.5">Estimated Earnings</th>
                     <th className="px-6 py-3.5">Status</th>
                     <th className="px-6 py-3.5">Submitted On</th>
+                    <th className="px-6 py-3.5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -266,6 +317,67 @@ export default function MySubmissionsPage() {
                       <td className="px-6 py-4 text-xs text-slate-500">
                         {new Date(sub.createdAt).toLocaleDateString()}
                       </td>
+                      <td className="px-6 py-4 text-right">
+                        {sub.status === "pending" ? (
+                          confirmWithdrawId === sub.id ? (
+                            <div className="flex items-center justify-end gap-1.5 animate-in fade-in">
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                disabled={withdrawMutation.isPending}
+                                onClick={() => withdrawMutation.mutate({ id: sub.id })}
+                                className="text-xs h-7 px-2 bg-rose-600 hover:bg-rose-700 cursor-pointer"
+                              >
+                                {withdrawMutation.isPending ? (
+                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                ) : (
+                                  "Confirm"
+                                )}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setConfirmWithdrawId(null)}
+                                className="text-xs h-7 px-1.5 text-slate-500 cursor-pointer"
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleStartEdit(sub)}
+                                className="text-xs h-7 px-2 text-slate-700 hover:text-slate-900 border-slate-200 cursor-pointer"
+                              >
+                                <Edit3 className="h-3 w-3 mr-1 text-slate-500" />
+                                Edit
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setConfirmWithdrawId(sub.id)}
+                                className="text-xs h-7 px-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 cursor-pointer"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Withdraw
+                              </Button>
+                            </div>
+                          )
+                        ) : sub.status === "approved" || sub.status === "paid" ? (
+                          <span className="text-[11px] font-medium text-slate-400 inline-flex items-center gap-1 justify-end">
+                            <Lock className="h-3 w-3 text-slate-400" />
+                            Locked
+                          </span>
+                        ) : (
+                          <Link href="/creator">
+                            <Button size="sm" variant="outline" className="text-xs h-7 px-2 text-indigo-600 border-indigo-200 hover:bg-indigo-50 cursor-pointer">
+                              Re-apply
+                            </Button>
+                          </Link>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -274,6 +386,56 @@ export default function MySubmissionsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Clip URL Modal */}
+      {editingSub && (
+        <Modal
+          isOpen={!!editingSub}
+          onClose={() => setEditingSub(null)}
+          title="Edit Clip URL"
+          description={`Update your submitted video link for ${editingSub.campaignTitle} before brand review.`}
+        >
+          <form onSubmit={handleSaveEdit} className="space-y-4">
+            {editError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs flex gap-2 items-center">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{editError}</span>
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700">
+                Post URL ({editingSub.platform})
+              </label>
+              <Input
+                value={editUrl}
+                onChange={(e) => setEditUrl(e.target.value)}
+                placeholder={`https://${editingSub.platform}.com/...`}
+                autoFocus
+              />
+              <span className="text-[11px] text-slate-400 block">
+                Must be a valid post URL on {editingSub.platform}.
+              </span>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditingSub(null)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateUrlMutation.isPending}>
+                {updateUrlMutation.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                )}
+                Save URL
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }

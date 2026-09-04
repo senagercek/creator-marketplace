@@ -17,10 +17,10 @@ import {
   approveSubmissionSchema,
   rejectSubmissionSchema,
 } from "../../../shared/schemas/submission";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import { eq, and, desc, inArray, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { pool } from "../../db";
-import { calculateEarnings, formatCentsToCurrency } from "../../../shared/types";
+import { calculateEarnings, formatCentsToCurrency, isValidPlatformUrl, Platform } from "../../../shared/types";
 
 export const submissionRouter = router({
   // Creator submits a clip URL
@@ -153,6 +153,101 @@ export const submissionRouter = router({
 
     return result;
   }),
+
+  // Creator withdraws (deletes) a pending submission
+  withdraw: creatorProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const sub = await ctx.db.query.submissions.findFirst({
+        where: and(
+          eq(submissions.id, input.id),
+          eq(submissions.creatorId, ctx.user.id)
+        ),
+      });
+
+      if (!sub) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Submission not found or access denied",
+        });
+      }
+
+      if (sub.status !== "pending") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Only pending submissions can be withdrawn. Approved clips are locked.",
+        });
+      }
+
+      await ctx.db.delete(submissions).where(eq(submissions.id, input.id));
+      return { success: true, id: input.id };
+    }),
+
+  // Creator updates the URL of a pending submission
+  updateUrl: creatorProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        postUrl: z.string().url("Must be a valid URL"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const sub = await ctx.db.query.submissions.findFirst({
+        where: and(
+          eq(submissions.id, input.id),
+          eq(submissions.creatorId, ctx.user.id)
+        ),
+      });
+
+      if (!sub) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Submission not found or access denied",
+        });
+      }
+
+      if (sub.status !== "pending") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Only pending submissions can be edited. Approved clips are locked.",
+        });
+      }
+
+      const trimmedUrl = input.postUrl.trim();
+      if (!isValidPlatformUrl(sub.platform as Platform, trimmedUrl)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `The URL must be a valid ${sub.platform} post URL.`,
+        });
+      }
+
+      // Check duplicate URL on the same campaign (excluding this submission)
+      const existing = await ctx.db.query.submissions.findFirst({
+        where: and(
+          eq(submissions.campaignId, sub.campaignId),
+          eq(submissions.postUrl, trimmedUrl),
+          ne(submissions.id, sub.id)
+        ),
+      });
+
+      if (existing) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "This clip URL has already been submitted to this campaign.",
+        });
+      }
+
+      const [updated] = await ctx.db
+        .update(submissions)
+        .set({
+          postUrl: trimmedUrl,
+          updatedAt: new Date(),
+        })
+        .where(eq(submissions.id, input.id))
+        .returning();
+
+      return updated;
+    }),
 
   // Admin lists submissions for a campaign review queue
   listByCampaign: adminProcedure
