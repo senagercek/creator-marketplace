@@ -63,9 +63,24 @@ export const submissionRouter = router({
       });
 
       if (existingSub) {
+        if (existingSub.status === "rejected" && existingSub.creatorId === ctx.user.id) {
+          // Allow re-submitting a previously rejected clip by setting it back to pending
+          const [updated] = await ctx.db
+            .update(submissions)
+            .set({
+              status: "pending",
+              rejectionReason: null,
+              platform: input.platform,
+              updatedAt: new Date(),
+            })
+            .where(eq(submissions.id, existingSub.id))
+            .returning();
+          return updated;
+        }
+
         throw new TRPCError({
           code: "CONFLICT",
-          message: "This clip URL has already been submitted to this campaign.",
+          message: "This clip URL has already been submitted and is currently pending review or approved.",
         });
       }
 

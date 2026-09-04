@@ -251,6 +251,16 @@ export default function MySubmissionsPage() {
                               <span>Reason: {sub.rejectionReason}</span>
                             </div>
                           )}
+                          {sub.status === "rejected" && (
+                            <div className="pt-1">
+                              <Link
+                                href="/creator"
+                                className="inline-flex items-center text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer"
+                              >
+                                Re-apply to Campaign &rarr;
+                              </Link>
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-xs text-slate-500">

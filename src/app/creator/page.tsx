@@ -420,20 +420,33 @@ export default function CreatorBrowsePage() {
                 </CardContent>
 
                 <CardFooter className="pt-0">
-                  {latestSub ? (
+                  {latestSub && latestSub.status !== "rejected" ? (
                     <Link href="/creator/my-submissions" className="w-full">
                       <Button variant="outline" className="w-full text-xs">
                         View in My Submissions
                       </Button>
                     </Link>
                   ) : camp.status === "active" ? (
-                    <Button
-                      className="w-full gap-2"
-                      onClick={() => handleOpenSubmitModal(camp)}
-                    >
-                      <Send className="h-3.5 w-3.5" />
-                      <span>Submit Video Clip</span>
-                    </Button>
+                    <div className="w-full flex flex-col sm:flex-row gap-2">
+                      <Button
+                        className="w-full gap-2"
+                        onClick={() => handleOpenSubmitModal(camp)}
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                        <span>
+                          {latestSub?.status === "rejected"
+                            ? "Re-apply / Submit New Clip"
+                            : "Submit Video Clip"}
+                        </span>
+                      </Button>
+                      {latestSub && (
+                        <Link href="/creator/my-submissions" className="w-full sm:w-auto">
+                          <Button variant="outline" className="w-full sm:w-auto text-xs whitespace-nowrap">
+                            View
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
                   ) : camp.status === "completed" ? (
                     <Button
                       variant="outline"
