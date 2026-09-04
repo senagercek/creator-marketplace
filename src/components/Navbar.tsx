@@ -24,11 +24,7 @@ export function Navbar() {
 
   const meQuery = trpc.auth.me.useQuery();
   const devUsersQuery = trpc.auth.listDevUsers.useQuery();
-  const switchUserMutation = trpc.auth.switchUser.useMutation({
-    onSuccess: () => {
-      window.location.reload();
-    },
-  });
+  const switchUserMutation = trpc.auth.switchUser.useMutation();
 
   const currentUser = meQuery.data;
   const devUsers = devUsersQuery.data || [];
@@ -36,7 +32,17 @@ export function Navbar() {
   const handleSwitchUser = async (userId: string) => {
     setDropdownOpen(false);
     setMobileMenuOpen(false);
+    const targetUser = devUsers.find((u) => u.id === userId);
     await switchUserMutation.mutateAsync({ userId });
+
+    // Intelligently route to role home page if current page belongs to the opposite role
+    if (targetUser?.role === "creator" && pathname.startsWith("/admin")) {
+      window.location.href = "/creator";
+    } else if (targetUser?.role === "admin" && pathname.startsWith("/creator")) {
+      window.location.href = "/admin";
+    } else {
+      window.location.reload();
+    }
   };
 
   const isAdmin = currentUser?.role === "admin";

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { trpc } from "@/trpc/client";
@@ -49,6 +49,12 @@ export default function CampaignDetailPage() {
   });
   const currentUser = meQuery.data;
   const isCreator = currentUser && currentUser.role !== "admin";
+
+  useEffect(() => {
+    if (currentUser && currentUser.role !== "admin") {
+      router.replace("/creator");
+    }
+  }, [currentUser, router]);
 
   const utils = trpc.useUtils();
 

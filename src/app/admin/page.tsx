@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { trpc } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,7 @@ export default function AdminCampaignsPage() {
     status: statusFilter,
   });
 
+  const router = useRouter();
   const utils = trpc.useUtils();
   const meQuery = trpc.auth.me.useQuery();
   const switchUserMutation = trpc.auth.switchUser.useMutation({
@@ -48,6 +50,12 @@ export default function AdminCampaignsPage() {
   });
   const currentUser = meQuery.data;
   const isCreator = currentUser && currentUser.role !== "admin";
+
+  useEffect(() => {
+    if (currentUser && currentUser.role !== "admin") {
+      router.replace("/creator");
+    }
+  }, [currentUser, router]);
 
   const createMutation = trpc.campaign.create.useMutation({
     onSuccess: () => {
