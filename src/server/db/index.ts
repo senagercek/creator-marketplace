@@ -13,6 +13,9 @@ const globalForDb = globalThis as unknown as {
   pool: pg.Pool | undefined;
 };
 
+const isLocal =
+  connectionString.includes("localhost") || connectionString.includes("127.0.0.1");
+
 export const pool =
   globalForDb.pool ??
   new pg.Pool({
@@ -20,6 +23,7 @@ export const pool =
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000,
+    ssl: isLocal ? false : { rejectUnauthorized: false },
   });
 
 if (process.env.NODE_ENV !== "production") {
