@@ -420,59 +420,12 @@ export default function CreatorBrowsePage() {
                 </CardContent>
 
                 <CardFooter className="pt-0">
-                  {latestSub?.status === "approved" || latestSub?.status === "paid" ? (
-                    <div className="flex items-center gap-2 w-full">
-                      <Link href="/creator/my-submissions" className="flex-1">
-                        <Button variant="outline" className="w-full text-xs">
-                          View Earnings
-                        </Button>
-                      </Link>
-                      {camp.status === "active" && (
-                        <Button
-                          variant="outline"
-                          className="gap-1 text-xs"
-                          onClick={() => handleOpenSubmitModal(camp)}
-                        >
-                          <Plus className="h-3 w-3" />
-                          <span>Submit Another</span>
-                        </Button>
-                      )}
-                    </div>
-                  ) : latestSub?.status === "pending" ? (
-                    <div className="flex items-center gap-2 w-full">
-                      <Link href="/creator/my-submissions" className="flex-1">
-                        <Button variant="outline" className="w-full text-xs">
-                          View Status
-                        </Button>
-                      </Link>
-                      {camp.status === "active" && (
-                        <Button
-                          variant="outline"
-                          className="gap-1 text-xs"
-                          onClick={() => handleOpenSubmitModal(camp)}
-                        >
-                          <Plus className="h-3 w-3" />
-                          <span>Submit Another</span>
-                        </Button>
-                      )}
-                    </div>
-                  ) : latestSub?.status === "rejected" ? (
-                    <div className="flex items-center gap-2 w-full">
-                      <Link href="/creator/my-submissions" className="flex-1">
-                        <Button variant="outline" className="w-full text-xs text-rose-700 hover:text-rose-800">
-                          View Reason
-                        </Button>
-                      </Link>
-                      {camp.status === "active" && (
-                        <Button
-                          className="gap-1.5 text-xs"
-                          onClick={() => handleOpenSubmitModal(camp)}
-                        >
-                          <Send className="h-3.5 w-3.5" />
-                          <span>Resubmit Clip</span>
-                        </Button>
-                      )}
-                    </div>
+                  {latestSub ? (
+                    <Link href="/creator/my-submissions" className="w-full">
+                      <Button variant="outline" className="w-full text-xs">
+                        View in My Submissions
+                      </Button>
+                    </Link>
                   ) : camp.status === "active" ? (
                     <Button
                       className="w-full gap-2"
